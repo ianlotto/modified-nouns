@@ -5,10 +5,29 @@
     <title>Modified Nouns</title>
     
     <link rel="stylesheet" href="css/app.css">
-    
   </head>
   <body>
-    <h1>Coming Soon.</h1>
+    
+    <div load-progress ng-class="{ complete: progressData.complete }"></div>
+    
+    <div modified-nouns ng-class="{ 'top-level': hasTopLevel }">
+      
+      <div
+        class="level"
+        ng-repeat="(key, level) in levels"
+        ng-style="{ 'z-index': 1 - key }"
+        ng-class="'level-' + key">
+        
+        <div
+          class="tile"
+          ng-repeat="(key, tile) in level"
+          ng-style="getStyles(key, tile)"
+          ng-class="'tile-' + key">
+        </div>
+        
+      </div>
+      
+    </div>
     
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
     

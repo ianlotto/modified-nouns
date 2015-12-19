@@ -28,7 +28,24 @@ angular.module('modifiedNouns', [])
   	}
   })();
   
+  var createImage = function (data) {
+    var blob = new $window.Blob([data]);
+    var image = new $window.Image();
+    
+    image.src = $window.URL.createObjectURL(blob);
+    
+    return image;
+  };
+  
   return {
+    
+    imgData: {
+      total: {
+        total: 0,
+        loaded: 0
+      }
+    },
+    
     getModifiedNouns: function () {
       var key = 'modifiedNouns';
       
@@ -53,41 +70,96 @@ angular.module('modifiedNouns', [])
       
       return promise;
     },
+    
+    onProgress: function (src, e) {
+      if(this.imgData.hasOwnProperty(src)) {
+        if (e.lengthComputable && angular.isObject(this.imgData[src])) {
+          this.imgData[src].loaded = e.loaded;
+        }
+        
+        var percentComplete = e.loaded / e.total;
+      } else {
+        if (e.lengthComputable) {  
+          
+          this.imgData[src] = {
+            loaded: e.loaded,
+            total: e.total
+          };
+          
+        } else {
+          this.imgData[src] = null;
+        }
+      }
+      
+      var total = 0;
+      var loaded = 0;
+      
+      for (var key in this.imgData) {
+        if(!!this.imgData[key]) {
+          total = total + this.imgData[key].total;
+          loaded = loaded + this.imgData[key].loaded;
+        }
+      }
+      
+      this.imgData.total.total = total;
+      this.imgData.total.loaded = loaded;
+      
+      console.log(loaded / total);
+    },
+    
+    getImage: function (src) {
+      var loader = this;
+      
+      var deferred = $q.defer();
+      var req = new $window.XMLHttpRequest();
+      
+      req.addEventListener('progress', function (e) {
+        loader.onProgress(src, e);
+      });
+      
+      req.addEventListener('load', function () {
+        deferred.resolve(createImage(req.response));
+      });
+      
+      req.open('GET', src);
+      req.responseType = 'arraybuffer';
+      
+      req.send();
+      
+      return deferred.promise;
+    },
+    
     getImages: function () {
+      var loader = this;
+      
       var imgData = ASSET_DATA.img;
       var imgCount = imgData.levels * imgData.tiles;
       
-      var numLoaded = 0;
-      var tiles = [];
+      var images = [];
       var srcData = [];
       var deferred = $q.defer();
       
-      var tile;
-      
       var _getImage = function () {
-        tile = new $window.Image();
-        tiles.push(tile);
-        
-        tile.onload = function () {
-          numLoaded++;
-          
-          if(numLoaded === imgCount) {
-            deferred.resolve(tiles);
-          }
-        };
-        
-        tile.src = imgData.template.replace(imgData.regExp,
+        var src = imgData.template.replace(imgData.regExp,
           function (match, number) {
             return srcData[ $window.parseInt(number) ];
           }
         );
+        
+        loader.getImage(src).then(function (image) {
+          images.push(image);
+          
+          if(images.length === imgCount) {
+            deferred.resolve(images);
+          }
+        });
       };
       
       for (var i = 0; i < imgData.levels; i++) {
         srcData[0] = Math.pow(2, i);
         
         for (var j = 0; j < imgData.tiles; j++) {
-          srcData[1] = j    
+          srcData[1] = j;
           _getImage();
         }
       }
@@ -99,11 +171,10 @@ angular.module('modifiedNouns', [])
 })
 
 .run(function (Loader) {
-  Loader.getModifiedNouns().then(function (data) {
-    
+  Loader.getModifiedNouns().then(function (modifiedNouns) {
   });
   
-  Loader.getImages().then(function (data) {
-    console.log(data);
+  Loader.getImages().then(function (images) {
+    console.log(Loader.imgData)
   });
 });

@@ -11,8 +11,11 @@ angular.module('modifiedNouns', [
     link: function (scope, element) {
       scope.progressData = Loader.progressData.total;
       
+      var scaledPercent;
+      
       scope.$watch('progressData.percent', function (percent) {
-        element.css('width', percent + '%');
+        scaledPercent = percent + (percent * .1);
+        element.css('width', scaledPercent + '%');
       });
     }
   };

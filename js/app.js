@@ -1,6 +1,7 @@
 'use strict';
 
 angular.module('modifiedNouns', [
+  'modifiedNouns.fullscreen',
   'modifiedNouns.loader'
 ])
 

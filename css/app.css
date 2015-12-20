@@ -5,6 +5,7 @@ html, body, ul, h1, h2, h3, h4, h5 {
 }
 
 * {
+  outline: none;
   transition: .5s opacity;
 }
 
@@ -19,6 +20,14 @@ body, [modified-nouns] {
   right: 0;
   z-index: 0;
   background-color: rgb(100,100,100);
+}
+
+button {
+  display: block;
+  border: none;
+  padding: 7px;
+  border-radius: 3px;
+  cursor: pointer;
 }
 
 [load-progress] {
@@ -36,6 +45,15 @@ body, [modified-nouns] {
 
 [load-progress].complete {
   opacity: 0;
+}
+
+[toggle-fullscreen] {
+  display: block;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  color: rgb(255,255,255);
+  background-color: rgb(0,0,0);
 }
 
 [modified-nouns] * {

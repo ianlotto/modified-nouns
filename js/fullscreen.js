@@ -32,7 +32,7 @@ angular.module('modifiedNouns.fullscreen', [])
         if(candidates.hasOwnProperty(key)) {
           methods = candidates[key];
 
-          for(var i = 0; i < methods.length; i++) {
+          for (var i = 0; i < methods.length; i++) {
 
             if(angular.isFunction(methods[i])) {
               fullScreen[key] = methods[i];
@@ -40,23 +40,25 @@ angular.module('modifiedNouns.fullscreen', [])
             }
           }
 
-          if(!fullScreen[key]) { return false; }
+          if(!fullScreen[key]) {
+            return false;
+          }
         }
       }
 
-      // Assign methods to object bound to proper contexts
       this.request = fullScreen.request.bind(body);
       this.exit    = fullScreen.exit.bind($$document);
 
-      return true; // Success
+      return true;
     },
 
     isActive: function () {
-      _fsElement = $$document.fullscreenElement ||
+      _fsElement =
+        $$document.fullscreenElement ||
         $$document.webkitFullscreenElement ||
         $$document.mozFullScreenElement ||
-        $$document.msFullscreenElement ||
-        undefined;
+        $$document.msFullscreenElement;
+        
       return !!_fsElement;
     },
 

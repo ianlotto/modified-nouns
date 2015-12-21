@@ -5,12 +5,6 @@ angular.module('modifiedNouns.input', [])
 .factory('Drag', function ($window) {
   var point, vector, diffX, diffY, finishTime, length, duration;
   
-  var getLength = function (a, b) {
-    return $window.Math.sqrt(
-      $window.Math.pow(a, 2) + $window.Math.pow(b, 2)
-    );
-  };
-  
   return {
     points: [],
     vectors: [],
@@ -21,6 +15,19 @@ angular.module('modifiedNouns.input', [])
       if(array.length > 10) {
         array.shift();
       };
+    },
+    
+    getLength: function (a, b) {
+      return $window.Math.sqrt(
+        $window.Math.pow(a, 2) + $window.Math.pow(b, 2)
+      );
+    },
+    
+    clearData: function () {
+      while (this.points.length > 0 || this.vectors.length > 0) {
+        this.points.pop();
+        this.vectors.pop(); 
+      }
     },
     
     registerPoint: function (data) {
@@ -38,12 +45,14 @@ angular.module('modifiedNouns.input', [])
     registerVector: function (startPoint, finishPoint) {
       finishTime = $window.Date.now();
       duration = finishTime - startPoint.time;
-      
+
       diffX = finishPoint.x - startPoint.x;
       diffY = finishPoint.y - startPoint.y;
-      length = getLength(diffX, diffY);
+      length = this.getLength(diffX, diffY);
       
       vector = {
+        x: diffX,
+        y: diffY,
         startX: startPoint.x,
         startY: startPoint.y,
         finishX: finishPoint.x,
@@ -72,32 +81,29 @@ angular.module('modifiedNouns.input', [])
     restrict: 'A',
     link: function(scope, element) {
       var mousedown = false;
-      var _elementPos = {};
       
-      var drag, startX, startY, startTime, elementPos, clientRect;
-      
-      var _point, point;
+      var startData, clientRect, _point, point;
       
       var getElementPos = function () {
         clientRect = element[0].getBoundingClientRect();
-        
-        _elementPos.top = clientRect.top;
-        _elementPos.left = clientRect.left;
-        
-        return _elementPos;
+                
+        return {
+          top: clientRect.top,
+          left: clientRect.left
+        };
       };
       
       var onMousedown = function (e) {
         e.preventDefault();
         
         mousedown = true;
-        drag = {}
         
-        startX = e.pageX;
-        startY = e.pageY;
+        // Store element and mouse positions on initial mousedown
+        startData = getElementPos();
+        startData.mouseX = e.pageX;
+        startData.mouseY = e.pageY;
         
-        elementPos = getElementPos();
-        startTime = $window.Date.now();
+        Drag.clearData(); // Start with a clean sheet
         
         point = Drag.registerPoint({ x: e.pageX, y: e.pageY });
         
@@ -108,80 +114,81 @@ angular.module('modifiedNouns.input', [])
       // Fires about 15ms intervals
       var onMousemove = function (e) {
         if(mousedown) {
-          drag.diffX = e.pageX - startX;
-          drag.diffY = e.pageY - startY;
-          
-          // Record time stamp and location
-          // compare this previous to location for drag vector
-          
           _point = { x: e.pageX, y: e.pageY };
           
           Drag.registerVector(point, _point);
           point = Drag.registerPoint(_point);
           
-          console.log(Drag.vectors[ Drag.vectors.length - 1 ]);
-          
           element.css({
-            left: elementPos.left + drag.diffX + 'px',
-            top: elementPos.top + drag.diffY + 'px'
+            left: startData.left + (_point.x - startData.mouseX) + 'px',
+            top: startData.top + (_point.y - startData.mouseY) + 'px'
           });
-          
-          // TODO: keep track of last three directions to figure out extra dimension
-          
         }
       };
-
+      
+      //TODO: incorporate decceleration curve
+      //TODO: figure out how long and far to 'throw' it for
+      //TODO: incoporate bouncing of limits at angles
+      
+      var lastVector, mouseupTime, idleTime;
+      
       var onMouseup = function (e) {
         if(mousedown) {
           mousedown = false;
           
-          //drag.length = getLength(drag.diffX, drag.diffY);
+          mouseupTime = $window.Date.now();
+          lastVector = Drag.vectors[ Drag.vectors.length - 1 ];
           
-          //drag.duration = $window.Date.now() - startTime;
-          //drag.rate = drag.length / drag.duration;
+          if(!!lastVector) {
+            idleTime = mouseupTime - lastVector.finishTime;
+          }
           
-          //drag.dir = [drag.diffX / drag.length, drag.diffY / drag.length];
-          
-          //console.log(drag);
-          
-          //Totally made up
-          // if(drag.rate > 1) {
-//             var length = drag.duration * (drag.duration / drag.length);
-//             var duration = drag.duration * 2;
-//
-//             var now = Date.now();
-//             var then;
-//
-//             var times = [];
-//
-//             var diffX = 0, diffY = 0;
-//
-//             //TODO: use dir from last 2/3 points, not overall dir
-//             //TODO: incorporate decceleration curve
-//             //TODO: figure out how long and far to 'throw' it for
-//             //TODO: incoporate bouncing of limits at angles
-//
-//             var intId = setInterval(function () {
-//               then = now;
-//               now = Date.now();
-//
-//               times.push(now - then);
-//
-//               diffX += drag.dir[0] * 5;
-//               diffY += drag.dir[1] * 5;
-//
-//               element.css({
-//                 left: elementPos.left + drag.diffX + diffX + 'px',
-//                 top: elementPos.top + drag.diffY + diffY + 'px'
-//               });
-//
-//             }, 5);
-//
-//             setTimeout(function () {
-//               clearInterval(intId);
-//             }, duration);
-//
-//           }
+          // Heuristic for now
+          if(idleTime < 25 && Drag.vectors.length > 5) {
+            
+            var startVector = Drag.vectors[ Drag.vectors.length - 5 ];
+            
+            // build a normalized vector from the last five vectors
+            var x = lastVector.finishX - startVector.startX;
+            var y = lastVector.finishY - startVector.startY;
+            
+            var vecLength = Drag.getLength(x, y);
+            var dir = [x / vecLength, y / vecLength];
+            
+            var frequency = 5;
+            var i = 0;
+            
+            // Keep as constant for now
+            var duration = 1000;
+            
+            var intNum = duration / frequency;
+            
+            // Let's see how this does...
+            var length = lastVector.duration * lastVector.length;
+            
+            var diffX, diffY, left, top;
+            
+            var intId = setInterval(function () {
+              i++;
+              
+              diffX = dir[0] * frequency * i;
+              diffY = dir[1] * frequency * i;
+              
+              left = startData.left + (point.x - startData.mouseX) + diffX;
+              top = startData.top + (point.y - startData.mouseY) + diffY;
+              
+              element.css({
+                left: left + 'px',
+                top: top + 'px'
+              });
+
+            }, frequency);
+            
+            setTimeout(function () {
+              clearInterval(intId);
+            }, duration);
+            
+          }
           
           $document.off('mousemove', onMousemove);
           $document.off('mouseup', onMouseup);

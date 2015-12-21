@@ -19,6 +19,7 @@
       
       <div
         class="level"
+        draggable
         ng-repeat="(key, level) in levels"
         ng-style="{ 'z-index': 1 - key }"
         ng-class="'level-' + key">
@@ -39,6 +40,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
     
     <script src="js/app.js"></script>
+    <script src="js/input.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/loader.js"></script>
     

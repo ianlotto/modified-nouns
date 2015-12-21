@@ -2,7 +2,7 @@
 
 angular.module('modifiedNouns.fullscreen', [])
 
-.factory('Fullscreen', function ($document, $rootScope) {
+.factory('Fullscreen', function ($document) {
   var $$document = $document[0];
   var body = $$document.body;
 

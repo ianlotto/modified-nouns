@@ -76,14 +76,15 @@ angular.module('modifiedNouns.input', [])
   
 })
 
-.factory('Fling', function ($window) {
+.factory('Fling', function ($window, $interval) {
   var FREQUENCY = 10;
   var DURATION = 1000;
+  var COUNT = DURATION / FREQUENCY;
   
   var MAX_IDLE_TIME = 25;
   var MIN_POINTS = 6;
   
-  var i, left, top, easeFactor;
+  var i, left, top, easeFactor, cancel;
   
   var easeOut = function (curTime, duration, power){
     return 1 - $window.Math.pow(1 - (curTime / duration), power);
@@ -110,14 +111,17 @@ angular.module('modifiedNouns.input', [])
       i = 0;
       
       increment(data, callback);
-  
-      var intId = setInterval(increment.bind(null, data, callback), FREQUENCY);
-  
-      setTimeout(function () {
-        clearInterval(intId);
-      }, DURATION);
       
-      return intId;
+      cancel = $interval(increment, FREQUENCY, COUNT, false, data, callback);
+      
+      return cancel;
+    },
+    
+    cancel: function () {
+      if (angular.isDefined(cancel)) {
+        $interval.cancel(cancel);
+        cancel = undefined;
+      }
     }
   };
   
@@ -176,6 +180,7 @@ angular.module('modifiedNouns.input', [])
         startData.mouseX = e.pageX;
         startData.mouseY = e.pageY;
         
+        Fling.cancel();
         Drag.clearData(); // Start with a clean sheet
         
         point = Drag.registerPoint({ x: e.pageX, y: e.pageY });
@@ -199,7 +204,6 @@ angular.module('modifiedNouns.input', [])
         }
       };
       
-      //TODO: enforce one fling at a time, stop a fling on mousedown
       //TODO: incoporate bouncing of limits at angles
       //TODO: adapt to touch
       

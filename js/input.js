@@ -76,13 +76,61 @@ angular.module('modifiedNouns.input', [])
   
 })
 
-.directive('draggable', function ($document, $window, Drag) {
+.factory('Fling', function ($window) {
+  var FREQUENCY = 10;
+  var DURATION = 1000;
+  
+  var MAX_IDLE_TIME = 25;
+  var MIN_POINTS = 6;
+  
+  var i, left, top, easeFactor;
+  
+  var easeOut = function (curTime, duration, power){
+    return 1 - $window.Math.pow(1 - (curTime / duration), power);
+  };
+  
+  var increment = function (data, callback) {
+    i++;
+    
+    easeFactor = easeOut(i * FREQUENCY, DURATION, 3);
+    
+    top = data.startY + (data.finishY - data.startY) * easeFactor;
+    left = data.startX + (data.finishX - data.startX) * easeFactor;
+    
+    callback(top, left);
+  };
+  
+  return {
+    // Heuristic
+    decide: function (idleTime, numPoints) {
+      return idleTime <= MAX_IDLE_TIME && numPoints >= MIN_POINTS;
+    },
+    
+    start: function (data, callback) {
+      i = 0;
+      
+      increment(data, callback);
+  
+      var intId = setInterval(increment.bind(null, data, callback), FREQUENCY);
+  
+      setTimeout(function () {
+        clearInterval(intId);
+      }, DURATION);
+      
+      return intId;
+    }
+  };
+  
+})
+
+.directive('draggable', function ($document, $window, Drag, Fling) {
   return {
     restrict: 'A',
     link: function(scope, element) {
       var mousedown = false;
       
-      var startData, clientRect, _point, point;
+      var startData, clientRect, _point, point, idleTime, flingData;
+      var flingVector, flingLength, startX, startY;
       
       var getElementPos = function () {
         clientRect = element[0].getBoundingClientRect();
@@ -91,6 +139,31 @@ angular.module('modifiedNouns.input', [])
           top: clientRect.top,
           left: clientRect.left
         };
+      };
+      
+      var positionElement = function (top, left) {
+        element.css({
+          top: top + 'px',
+          left: left + 'px'
+        });
+      };
+      
+      var startFling = function (startPoint, finishPoint) {
+        flingVector = Drag.registerVector(startPoint, finishPoint);
+        flingLength = flingVector.length * (flingVector.duration / 50);     
+        
+        startX = startData.left + (finishPoint.x - startData.mouseX);
+        startY = startData.top + (finishPoint.y - startData.mouseY);
+        
+        flingData = {
+          startX: startX,
+          finishX: startX + (flingVector.dir[0] * flingLength),
+          
+          startY: startY,
+          finishY: startY + (flingVector.dir[1] * flingLength)
+        };
+        
+        Fling.start(flingData, positionElement);
       };
       
       var onMousedown = function (e) {
@@ -119,75 +192,28 @@ angular.module('modifiedNouns.input', [])
           Drag.registerVector(point, _point);
           point = Drag.registerPoint(_point);
           
-          element.css({
-            left: startData.left + (_point.x - startData.mouseX) + 'px',
-            top: startData.top + (_point.y - startData.mouseY) + 'px'
-          });
+          positionElement(
+            startData.top + (_point.y - startData.mouseY),
+            startData.left + (_point.x - startData.mouseX)
+          );
         }
       };
       
-      //TODO: incorporate decceleration curve
-      //TODO: figure out how long and far to 'throw' it for
+      //TODO: enforce one fling at a time, stop a fling on mousedown
       //TODO: incoporate bouncing of limits at angles
-      
-      var lastVector, mouseupTime, idleTime;
+      //TODO: adapt to touch
       
       var onMouseup = function (e) {
         if(mousedown) {
           mousedown = false;
           
-          mouseupTime = $window.Date.now();
-          lastVector = Drag.vectors[ Drag.vectors.length - 1 ];
-          
-          if(!!lastVector) {
-            idleTime = mouseupTime - lastVector.finishTime;
+          if(!!point) {
+            idleTime = $window.Date.now() - point.time;
           }
           
-          // Heuristic for now
-          if(idleTime < 25 && Drag.vectors.length > 5) {
-            
-            var startVector = Drag.vectors[ Drag.vectors.length - 5 ];
-            
-            // build a normalized vector from the last five vectors
-            var x = lastVector.finishX - startVector.startX;
-            var y = lastVector.finishY - startVector.startY;
-            
-            var vecLength = Drag.getLength(x, y);
-            var dir = [x / vecLength, y / vecLength];
-            
-            var frequency = 5;
-            var i = 0;
-            
-            // Keep as constant for now
-            var duration = 1000;
-            
-            var intNum = duration / frequency;
-            
-            // Let's see how this does...
-            var length = lastVector.duration * lastVector.length;
-            
-            var diffX, diffY, left, top;
-            
-            var intId = setInterval(function () {
-              i++;
-              
-              diffX = dir[0] * frequency * i;
-              diffY = dir[1] * frequency * i;
-              
-              left = startData.left + (point.x - startData.mouseX) + diffX;
-              top = startData.top + (point.y - startData.mouseY) + diffY;
-              
-              element.css({
-                left: left + 'px',
-                top: top + 'px'
-              });
-
-            }, frequency);
-            
-            setTimeout(function () {
-              clearInterval(intId);
-            }, duration);
-            
+          if(Fling.decide(idleTime, Drag.points.length)) {
+            var startPoint = Drag.points[ Drag.points.length - 6 ];
+            startFling(startPoint, point);
           }
           
           $document.off('mousemove', onMousemove);

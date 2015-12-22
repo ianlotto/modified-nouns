@@ -76,9 +76,11 @@ angular.module('modifiedNouns.input', [])
   
 })
 
-.factory('Fling', function ($window, $interval) {
+.factory('Fling', function ($window, $interval, Limit) {
   var FREQUENCY = 10;
   var DURATION = 1000;
+  var BOUNCE_DAMPER = .25;
+  
   var COUNT = DURATION / FREQUENCY;
   
   var MAX_IDLE_TIME = 25;
@@ -95,10 +97,33 @@ angular.module('modifiedNouns.input', [])
     
     easeFactor = easeOut(i * FREQUENCY, DURATION, 3);
     
-    top = data.startY + (data.finishY - data.startY) * easeFactor;
     left = data.startX + (data.finishX - data.startX) * easeFactor;
+    top = data.startY + (data.finishY - data.startY) * easeFactor;
     
-    callback(top, left);
+    //TODO: fix bouncing calc for min conditions
+    Limit.check(left, top, function (x, y, limits) {
+      var d;
+      
+      if(x === 1) {
+        d = left - limits.maxX;
+        left = (limits.maxX - d) * BOUNCE_DAMPER;
+      }
+      else if(x === -1) {
+        d = left - limits.minX;
+        left = (limits.minX - d) * BOUNCE_DAMPER;
+      }
+      
+      if(y === 1) {
+        d = top - limits.maxY;
+        top = (limits.maxY - top) * BOUNCE_DAMPER;
+      }
+      else if(y === -1) {
+        d = top - limits.minY;
+        top = (limits.minY - d) * BOUNCE_DAMPER;
+      }
+      
+      callback(left, top);
+    });
   };
   
   return {
@@ -107,11 +132,10 @@ angular.module('modifiedNouns.input', [])
       return idleTime <= MAX_IDLE_TIME && numPoints >= MIN_POINTS;
     },
     
-    start: function (data, callback) {
+    start: function (data, callback) { console.log(data.finishX);
       i = 0;
       
       increment(data, callback);
-      
       cancel = $interval(increment, FREQUENCY, COUNT, false, data, callback);
       
       return cancel;
@@ -127,28 +151,46 @@ angular.module('modifiedNouns.input', [])
   
 })
 
-.directive('draggable', function ($document, $window, Drag, Fling) {
+.factory('Limit', function () {
+  var limitCheck = {};
+  var limits = {};
+  
+  return {
+    
+    $set: function (startData, parentData) {
+      limits.maxX = parentData.left;
+      limits.minX = parentData.width - startData.width;
+      
+      limits.maxY = parentData.top
+      limits.minY = parentData.height - startData.height;
+    },
+    
+    check: function (x, y, callback) {
+      limitCheck.x = x < limits.minX ? -1 : x > limits.maxX ? 1 : 0;
+      limitCheck.y = y < limits.minY ? -1 : y > limits.maxY ? 1 : 0;
+      
+      callback(limitCheck.x, limitCheck.y, limits);
+    }
+  };
+  
+})
+
+//TODO: adapt to touch
+
+.directive('draggable', function ($document, $window, Drag, Fling, Limit) {
   return {
     restrict: 'A',
     link: function(scope, element) {
       var mousedown = false;
+      var $parent = element.parent();
       
-      var startData, clientRect, _point, point, idleTime, flingData;
-      var flingVector, flingLength, startX, startY;
-      
-      var getElementPos = function () {
-        clientRect = element[0].getBoundingClientRect();
-                
-        return {
-          top: clientRect.top,
-          left: clientRect.left
-        };
-      };
-      
-      var positionElement = function (top, left) {
+      var startData, _point, point, idleTime, flingData;
+      var flingVector, flingLength, startX, startY, posX, posY;
+            
+      var positionElement = function (left, top) {
         element.css({
-          top: top + 'px',
-          left: left + 'px'
+          left: left + 'px',
+          top: top + 'px'
         });
       };
       
@@ -175,13 +217,16 @@ angular.module('modifiedNouns.input', [])
         
         mousedown = true;
         
+        // Start with a clean sheet
+        Fling.cancel();
+        Drag.clearData();
+        
         // Store element and mouse positions on initial mousedown
-        startData = getElementPos();
+        startData = element[0].getBoundingClientRect();
         startData.mouseX = e.pageX;
         startData.mouseY = e.pageY;
         
-        Fling.cancel();
-        Drag.clearData(); // Start with a clean sheet
+        Limit.$set(startData, $parent[0].getBoundingClientRect());
         
         point = Drag.registerPoint({ x: e.pageX, y: e.pageY });
         
@@ -197,15 +242,19 @@ angular.module('modifiedNouns.input', [])
           Drag.registerVector(point, _point);
           point = Drag.registerPoint(_point);
           
-          positionElement(
-            startData.top + (_point.y - startData.mouseY),
-            startData.left + (_point.x - startData.mouseX)
-          );
+          posX = startData.left + (_point.x - startData.mouseX);
+          posY = startData.top + (_point.y - startData.mouseY);
+          
+          Limit.check(posX, posY, onLimitCheck);
         }
       };
       
-      //TODO: incoporate bouncing of limits at angles
-      //TODO: adapt to touch
+      var onLimitCheck = function (x, y, limits) {
+        posX = x === -1 ? limits.minX : x === 1 ? limits.maxX : posX;
+        posY = y === -1 ? limits.minY : y === 1 ? limits.maxY : posY;
+      
+        positionElement(posX, posY);
+      };
       
       var onMouseup = function (e) {
         if(mousedown) {

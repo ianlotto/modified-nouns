@@ -131,6 +131,8 @@ angular.module('modifiedNouns.input', [])
   };
   
   return {
+    MAX_IDLE_TIME: MAX_IDLE_TIME,
+    MIN_POINTS: MIN_POINTS,
     // Heuristic
     decide: function (idleTime, numPoints) {
       return idleTime <= MAX_IDLE_TIME && numPoints >= MIN_POINTS;
@@ -180,17 +182,16 @@ angular.module('modifiedNouns.input', [])
 })
 
 //TODO: adapt to touch
-
 .directive('draggable', function ($document, $window, Drag, Fling, Limit) {
   return {
     restrict: 'A',
     link: function(scope, element) {
       var $parent = element.parent();
       var pos = {};
+      var flingData = {};
       
-      var vector, point, _point;
-      var startData, idleTime, flingData;
-      var flingVector, flingLength, startX, startY;
+      var elementRect, vector, point, _point;
+      var idleTime, startPoint, flingVector, flingLength;
             
       var positionElement = function (left, top) {
         element.css({
@@ -199,25 +200,20 @@ angular.module('modifiedNouns.input', [])
         });
       };
       
-      //TODO: port to Fling
-      var startFling = function (startPoint, finishPoint) {
-        flingVector = Drag.registerVector(startPoint, finishPoint);
+      var createFling = function () {
+        startPoint = Drag.points[ Drag.points.length - Fling.MIN_POINTS ];
+        flingVector = Drag.registerVector(startPoint, point);
         flingLength = flingVector.length * (flingVector.duration / 50);     
-        
-        startX = startData.left + (finishPoint.x - startData.mouseX);
-        startY = startData.top + (finishPoint.y - startData.mouseY);
-        
-        flingData = {
-          startX: startX,
-          finishX: startX + (flingVector.dir[0] * flingLength),
-          
-          startY: startY,
-          finishY: startY + (flingVector.dir[1] * flingLength)
-        };
-        
-        Fling.start(flingData, positionElement);
+      
+        flingData.startX  = pos.x;
+        flingData.finishX = pos.x + (flingVector.dir[0] * flingLength);
+        flingData.startY  = pos.y;
+        flingData.finishY = pos.y + (flingVector.dir[1] * flingLength);
+      
+        Fling.start(flingData, positionElement); 
       };
       
+      //TODO: stickiness on window resize
       var constrainPos = function (pos, checkResult) {        
         pos.x = checkResult.x === -1 ?
           checkResult.limits.minX : checkResult.x === 1 ?
@@ -237,24 +233,19 @@ angular.module('modifiedNouns.input', [])
         Fling.cancel();
         Drag.clearData();
         
-        // Store element and mouse positions on initial mousedown
-        startData = element[0].getBoundingClientRect();
+        elementRect = element[0].getBoundingClientRect();
         
-        pos.x = startData.left;
-        pos.y = startData.top;
+        pos.x = elementRect.left;
+        pos.y = elementRect.top;
         
-        startData.mouseX = e.pageX;
-        startData.mouseY = e.pageY;
-        
-        Limit.$set(startData, $parent[0].getBoundingClientRect());
+        Limit.$set(elementRect, $parent[0].getBoundingClientRect());
         
         point = Drag.registerPoint({ x: e.pageX, y: e.pageY });
         
-        $document.on('mousemove', onMousemove);
+        $document.on('mousemove', onMousemove); // Fires ~15ms
         $document.on('mouseup', onMouseup);
       };
       
-      // Fires ~15ms
       var onMousemove = function (e) {
         _point = { x: e.pageX, y: e.pageY };
         
@@ -272,11 +263,10 @@ angular.module('modifiedNouns.input', [])
       var onMouseup = function (e) {
         if(!!point) {
           idleTime = $window.Date.now() - point.time;
-        }
-        
-        if(Fling.decide(idleTime, Drag.points.length)) {
-          var startPoint = Drag.points[ Drag.points.length - 6 ];
-          startFling(startPoint, point);
+          
+          if(Fling.decide(idleTime, Drag.points.length)) {
+            createFling();
+          }
         }
         
         $document.off('mousemove', onMousemove);

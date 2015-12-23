@@ -86,7 +86,7 @@ angular.module('modifiedNouns.input', [])
   var MAX_IDLE_TIME = 25;
   var MIN_POINTS = 6;
   
-  var i, left, top, easeFactor, cancel;
+  var i, left, top, easeFactor, cancel, checkResult;
   
   var easeOut = function (curTime, duration, power){
     return 1 - $window.Math.pow(1 - (curTime / duration), power);
@@ -100,30 +100,29 @@ angular.module('modifiedNouns.input', [])
     left = data.startX + (data.finishX - data.startX) * easeFactor;
     top = data.startY + (data.finishY - data.startY) * easeFactor;
     
-    //TODO: fix bouncing calc for min conditions
-    Limit.check(left, top, function (x, y, limits) {
-      var d;
-      
-      if(x === 1) {
-        d = left - limits.maxX;
-        left = (limits.maxX - d) * BOUNCE_DAMPER;
-      }
-      else if(x === -1) {
-        d = left - limits.minX;
-        left = (limits.minX - d) * BOUNCE_DAMPER;
-      }
-      
-      if(y === 1) {
-        d = top - limits.maxY;
-        top = (limits.maxY - top) * BOUNCE_DAMPER;
-      }
-      else if(y === -1) {
-        d = top - limits.minY;
-        top = (limits.minY - d) * BOUNCE_DAMPER;
-      }
-      
-      callback(left, top);
-    });
+    checkResult = Limit.check(left, top);
+    
+    var d;
+    
+    if(checkResult.x === 1) {
+      d = left - checkResult.limits.maxX;
+      left = checkResult.limits.maxX - d * BOUNCE_DAMPER;
+    }
+    else if(checkResult.x === -1) {
+      d = left - checkResult.limits.minX;
+      left = checkResult.limits.minX - d * BOUNCE_DAMPER;
+    }
+    
+    if(checkResult.y === 1) {
+      d = top - checkResult.limits.maxY;
+      top = checkResult.limits.maxY - d * BOUNCE_DAMPER;
+    }
+    else if(checkResult.y === -1) {
+      d = top - checkResult.limits.minY;
+      top = checkResult.limits.minY - d * BOUNCE_DAMPER;
+    }
+    
+    callback(left, top);
   };
   
   return {
@@ -132,7 +131,7 @@ angular.module('modifiedNouns.input', [])
       return idleTime <= MAX_IDLE_TIME && numPoints >= MIN_POINTS;
     },
     
-    start: function (data, callback) { console.log(data.finishX);
+    start: function (data, callback) {
       i = 0;
       
       increment(data, callback);
@@ -152,8 +151,8 @@ angular.module('modifiedNouns.input', [])
 })
 
 .factory('Limit', function () {
-  var limitCheck = {};
   var limits = {};
+  var limitCheck = { limits: limits };
   
   return {
     
@@ -164,12 +163,12 @@ angular.module('modifiedNouns.input', [])
       limits.maxY = parentData.top
       limits.minY = parentData.height - startData.height;
     },
-    
-    check: function (x, y, callback) {
+
+    check: function (x, y) {
       limitCheck.x = x < limits.minX ? -1 : x > limits.maxX ? 1 : 0;
       limitCheck.y = y < limits.minY ? -1 : y > limits.maxY ? 1 : 0;
       
-      callback(limitCheck.x, limitCheck.y, limits);
+      return limitCheck;
     }
   };
   
@@ -185,7 +184,7 @@ angular.module('modifiedNouns.input', [])
       var $parent = element.parent();
       
       var startData, _point, point, idleTime, flingData;
-      var flingVector, flingLength, startX, startY, posX, posY;
+      var flingVector, flingLength, checkResult, startX, startY, posX, posY;
             
       var positionElement = function (left, top) {
         element.css({
@@ -194,6 +193,7 @@ angular.module('modifiedNouns.input', [])
         });
       };
       
+      //TODO: port to Fling
       var startFling = function (startPoint, finishPoint) {
         flingVector = Drag.registerVector(startPoint, finishPoint);
         flingLength = flingVector.length * (flingVector.duration / 50);     
@@ -242,18 +242,22 @@ angular.module('modifiedNouns.input', [])
           Drag.registerVector(point, _point);
           point = Drag.registerPoint(_point);
           
+          //TODO: fix stickiness when out of limits and coming back
           posX = startData.left + (_point.x - startData.mouseX);
           posY = startData.top + (_point.y - startData.mouseY);
           
-          Limit.check(posX, posY, onLimitCheck);
+          checkResult = Limit.check(posX, posY);
+          
+          posX = checkResult.x === -1 ? 
+            checkResult.limits.minX : checkResult.x === 1 ?
+            checkResult.limits.maxX : posX;
+          
+          posY = checkResult.y === -1 ?
+            checkResult.limits.minY : checkResult.y === 1 ?
+            checkResult.limits.maxY : posY;
+      
+          positionElement(posX, posY);
         }
-      };
-      
-      var onLimitCheck = function (x, y, limits) {
-        posX = x === -1 ? limits.minX : x === 1 ? limits.maxX : posX;
-        posY = y === -1 ? limits.minY : y === 1 ? limits.maxY : posY;
-      
-        positionElement(posX, posY);
       };
       
       var onMouseup = function (e) {

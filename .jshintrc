@@ -1,0 +1,22 @@
+{
+  "globalstrict": true,
+  "eqeqeq": true,
+  "forin": true,
+  "freeze": true,
+  "funcscope": true,
+  "immed": true,
+  "latedef": "nofunc",
+  "newcap": true,
+  "noarg": true,
+  "nonew": true,
+  "shadow": "inner",
+  "undef": true,
+  "unused": true,
+  "sub": true,
+  "camelcase": true,
+  "indent": 2,
+  "node": true,
+  "globals": {
+    "angular": true
+  }
+}

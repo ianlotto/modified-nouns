@@ -90,7 +90,7 @@ angular.module('modifiedNouns.input', [])
 
   var i, difference, easeFactor, cancel;
 
-  var easeOut = function (curTime, duration, power){
+  var easeOut = function (curTime, duration, power) {
     return 1 - $window.Math.pow(1 - (curTime / duration), power);
   };
 
@@ -102,15 +102,13 @@ angular.module('modifiedNouns.input', [])
   var bouncePos = function (pos, checkResult) {
     if(checkResult.x === 1) {
       pos.x = calcBounce(pos.x, checkResult.limits.maxX);
-    }
-    else if(checkResult.x === -1) {
+    } else if(checkResult.x === -1) {
       pos.x = calcBounce(pos.x, checkResult.limits.minX);
     }
 
     if(checkResult.y === 1) {
       pos.y = calcBounce(pos.y, checkResult.limits.maxY);
-    }
-    else if(checkResult.y === -1) {
+    } else if(checkResult.y === -1) {
       pos.y = calcBounce(pos.y, checkResult.limits.minY);
     }
 
@@ -181,7 +179,7 @@ angular.module('modifiedNouns.input', [])
 
 })
 
-//TODO: adapt to touch
+// TODO: adapt to touch
 .directive('draggable', function ($document, $window, Drag, Fling, Limit) {
   return {
     restrict: 'A',
@@ -213,7 +211,7 @@ angular.module('modifiedNouns.input', [])
         Fling.start(flingData, positionElement);
       };
 
-      //TODO: stickiness on window resize
+      // TODO: stickiness on window resize
       var constrainPos = function (pos, checkResult) {
         pos.x = checkResult.x === -1 ?
           checkResult.limits.minX : checkResult.x === 1 ?

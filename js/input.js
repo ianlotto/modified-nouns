@@ -14,7 +14,7 @@ angular.module('modifiedNouns.input', [])
       
       if(array.length > 10) {
         array.shift();
-      };
+      }
     },
     
     getLength: function (a, b) {
@@ -79,7 +79,7 @@ angular.module('modifiedNouns.input', [])
 .factory('Fling', function ($window, $interval, Limit) {
   var FREQUENCY = 10;
   var DURATION = 1000;
-  var BOUNCE_DAMPER = .25;
+  var BOUNCE_DAMPER = 0.25;
   
   var COUNT = DURATION / FREQUENCY;
   
@@ -88,7 +88,7 @@ angular.module('modifiedNouns.input', [])
   
   var pos = {};
   
-  var i, difference, left, top, easeFactor, cancel;
+  var i, difference, easeFactor, cancel;
   
   var easeOut = function (curTime, duration, power){
     return 1 - $window.Math.pow(1 - (curTime / duration), power);
@@ -167,7 +167,7 @@ angular.module('modifiedNouns.input', [])
       limits.maxX = parentData.left;
       limits.minX = parentData.width - startData.width;
       
-      limits.maxY = parentData.top
+      limits.maxY = parentData.top;
       limits.minY = parentData.height - startData.height;
     },
 
@@ -260,7 +260,7 @@ angular.module('modifiedNouns.input', [])
         positionElement(pos.x, pos.y);
       };
       
-      var onMouseup = function (e) {
+      var onMouseup = function () {
         if(!!point) {
           idleTime = $window.Date.now() - point.time;
           

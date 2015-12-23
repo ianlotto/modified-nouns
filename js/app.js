@@ -16,7 +16,7 @@ angular.module('modifiedNouns', [
       var scaledPercent;
       
       scope.$watch('progressData.percent', function (percent) {
-        scaledPercent = percent + (percent * .1);
+        scaledPercent = percent + (percent * 0.1);
         element.css('width', scaledPercent + '%');
       });
     }
@@ -27,7 +27,7 @@ angular.module('modifiedNouns', [
   return {
     restrict: 'A',
     scope: true,
-    link: function (scope, element) {
+    link: function (scope) {
       scope.images = Loader.images;
       scope.levels = {};
       

@@ -58,7 +58,7 @@ angular.module('modifiedNouns.fullscreen', [])
         $$document.webkitFullscreenElement ||
         $$document.mozFullScreenElement ||
         $$document.msFullscreenElement;
-        
+
       return !!_fsElement;
     },
 
@@ -74,13 +74,13 @@ angular.module('modifiedNouns.fullscreen', [])
     restrict: 'A',
     link: function (scope, element) {
       var success = Fullscreen.setMethods();
-      
+
       if(success) {
         element.on('click', Fullscreen.toggle.bind(Fullscreen));
       } else {
         element.remove();
       }
-      
+
     }
   };
 });

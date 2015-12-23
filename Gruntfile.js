@@ -1,6 +1,6 @@
 module.exports = function (grunt) {
   'use strict';
-  
+
   grunt.initConfig({
     jscs: {
       src: ['Gruntfile.js', 'js/*.js'],
@@ -16,9 +16,9 @@ module.exports = function (grunt) {
       all: ['Gruntfile.js', 'js/*.js']
     }
   });
-  
+
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-jscs');
-  
+
   grunt.registerTask('test', ['jscs', 'jshint']);
 };

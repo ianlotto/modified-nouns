@@ -86,10 +86,35 @@ angular.module('modifiedNouns.input', [])
   var MAX_IDLE_TIME = 25;
   var MIN_POINTS = 6;
   
-  var i, left, top, easeFactor, cancel, checkResult;
+  var pos = {};
+  
+  var i, difference, left, top, easeFactor, cancel;
   
   var easeOut = function (curTime, duration, power){
     return 1 - $window.Math.pow(1 - (curTime / duration), power);
+  };
+  
+  var calcBounce = function (value, limit) {
+    difference = value - limit;
+    return limit - difference * BOUNCE_DAMPER; 
+  };
+  
+  var bouncePos = function (pos, checkResult) {
+    if(checkResult.x === 1) {
+      pos.x = calcBounce(pos.x, checkResult.limits.maxX);
+    }
+    else if(checkResult.x === -1) {
+      pos.x = calcBounce(pos.x, checkResult.limits.minX);
+    }
+    
+    if(checkResult.y === 1) {
+      pos.y = calcBounce(pos.y, checkResult.limits.maxY);
+    }
+    else if(checkResult.y === -1) {
+      pos.y = calcBounce(pos.y, checkResult.limits.minY);
+    }
+    
+    return pos;
   };
   
   var increment = function (data, callback) {
@@ -97,32 +122,12 @@ angular.module('modifiedNouns.input', [])
     
     easeFactor = easeOut(i * FREQUENCY, DURATION, 3);
     
-    left = data.startX + (data.finishX - data.startX) * easeFactor;
-    top = data.startY + (data.finishY - data.startY) * easeFactor;
+    pos.x = data.startX + (data.finishX - data.startX) * easeFactor;
+    pos.y = data.startY + (data.finishY - data.startY) * easeFactor;
     
-    checkResult = Limit.check(left, top);
+    pos = bouncePos(pos, Limit.check(pos.x, pos.y));
     
-    var d;
-    
-    if(checkResult.x === 1) {
-      d = left - checkResult.limits.maxX;
-      left = checkResult.limits.maxX - d * BOUNCE_DAMPER;
-    }
-    else if(checkResult.x === -1) {
-      d = left - checkResult.limits.minX;
-      left = checkResult.limits.minX - d * BOUNCE_DAMPER;
-    }
-    
-    if(checkResult.y === 1) {
-      d = top - checkResult.limits.maxY;
-      top = checkResult.limits.maxY - d * BOUNCE_DAMPER;
-    }
-    else if(checkResult.y === -1) {
-      d = top - checkResult.limits.minY;
-      top = checkResult.limits.minY - d * BOUNCE_DAMPER;
-    }
-    
-    callback(left, top);
+    callback(pos.x, pos.y);
   };
   
   return {
@@ -180,11 +185,12 @@ angular.module('modifiedNouns.input', [])
   return {
     restrict: 'A',
     link: function(scope, element) {
-      var mousedown = false;
       var $parent = element.parent();
+      var pos = {};
       
-      var startData, _point, point, idleTime, flingData;
-      var flingVector, flingLength, checkResult, startX, startY, posX, posY;
+      var vector, point, _point;
+      var startData, idleTime, flingData;
+      var flingVector, flingLength, startX, startY;
             
       var positionElement = function (left, top) {
         element.css({
@@ -212,10 +218,20 @@ angular.module('modifiedNouns.input', [])
         Fling.start(flingData, positionElement);
       };
       
+      var constrainPos = function (pos, checkResult) {        
+        pos.x = checkResult.x === -1 ?
+          checkResult.limits.minX : checkResult.x === 1 ?
+          checkResult.limits.maxX : pos.x;
+
+        pos.y = checkResult.y === -1 ?
+          checkResult.limits.minY : checkResult.y === 1 ?
+          checkResult.limits.maxY : pos.y;
+        
+        return pos;
+      };
+      
       var onMousedown = function (e) {
         e.preventDefault();
-        
-        mousedown = true;
         
         // Start with a clean sheet
         Fling.cancel();
@@ -223,6 +239,10 @@ angular.module('modifiedNouns.input', [])
         
         // Store element and mouse positions on initial mousedown
         startData = element[0].getBoundingClientRect();
+        
+        pos.x = startData.left;
+        pos.y = startData.top;
+        
         startData.mouseX = e.pageX;
         startData.mouseY = e.pageY;
         
@@ -234,48 +254,33 @@ angular.module('modifiedNouns.input', [])
         $document.on('mouseup', onMouseup);
       };
       
-      // Fires about 15ms intervals
+      // Fires ~15ms
       var onMousemove = function (e) {
-        if(mousedown) {
-          _point = { x: e.pageX, y: e.pageY };
-          
-          Drag.registerVector(point, _point);
-          point = Drag.registerPoint(_point);
-          
-          //TODO: fix stickiness when out of limits and coming back
-          posX = startData.left + (_point.x - startData.mouseX);
-          posY = startData.top + (_point.y - startData.mouseY);
-          
-          checkResult = Limit.check(posX, posY);
-          
-          posX = checkResult.x === -1 ? 
-            checkResult.limits.minX : checkResult.x === 1 ?
-            checkResult.limits.maxX : posX;
-          
-          posY = checkResult.y === -1 ?
-            checkResult.limits.minY : checkResult.y === 1 ?
-            checkResult.limits.maxY : posY;
-      
-          positionElement(posX, posY);
-        }
+        _point = { x: e.pageX, y: e.pageY };
+        
+        vector = Drag.registerVector(point, _point);
+        point  = Drag.registerPoint(_point); // New, latest point
+        
+        pos.x = pos.x + vector.x;
+        pos.y = pos.y + vector.y;
+        
+        pos = constrainPos(pos, Limit.check(pos.x, pos.y));
+    
+        positionElement(pos.x, pos.y);
       };
       
       var onMouseup = function (e) {
-        if(mousedown) {
-          mousedown = false;
-          
-          if(!!point) {
-            idleTime = $window.Date.now() - point.time;
-          }
-          
-          if(Fling.decide(idleTime, Drag.points.length)) {
-            var startPoint = Drag.points[ Drag.points.length - 6 ];
-            startFling(startPoint, point);
-          }
-          
-          $document.off('mousemove', onMousemove);
-          $document.off('mouseup', onMouseup);
+        if(!!point) {
+          idleTime = $window.Date.now() - point.time;
         }
+        
+        if(Fling.decide(idleTime, Drag.points.length)) {
+          var startPoint = Drag.points[ Drag.points.length - 6 ];
+          startFling(startPoint, point);
+        }
+        
+        $document.off('mousemove', onMousemove);
+        $document.off('mouseup', onMouseup);
       };
       
       element.on('mousedown', onMousedown);

@@ -3,6 +3,7 @@
 angular.module('modifiedNouns', [
   'modifiedNouns.input',
   'modifiedNouns.drag',
+  'modifiedNouns.fling',
   'modifiedNouns.fullscreen',
   'modifiedNouns.loader'
 ])

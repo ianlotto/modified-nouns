@@ -136,6 +136,7 @@ angular.module('modifiedNouns.drag', [])
           toggleHandlers('on');
         };
 
+        //TODO: stickiness on window resize
         var onMove = function (e) {
           _point = Input.getPos(e);
 

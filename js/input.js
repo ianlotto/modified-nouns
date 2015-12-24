@@ -179,116 +179,120 @@ angular.module('modifiedNouns.input', [])
 
 })
 
-// TODO: adapt to touch
-.directive('draggable', function ($document, $window, Drag, Fling, Limit) {
+.factory('Input', function () {
+  var pos = {};
+
+  var touch, changedTouch;
+
   return {
-    restrict: 'A',
-    link: function(scope, element) {
-      var $parent = element.parent();
-      var pos = {};
-      var flingData = {};
+    // Normalize between mouse and touch
+    getPos: function (e) {
+      touch = (!!e.touches && e.touches.length > 0 && e.touches[0]) || e;
+      changedTouch = !!e.changedTouches && e.changedTouches[0];
 
-      var elementRect, vector, point, _point;
-      var idleTime, startPoint, flingVector, flingLength;
+      touch = changedTouch || touch;
 
-      var positionElement = function (left, top) {
-        element.css({
-          left: left + 'px',
-          top: top + 'px'
-        });
-      };
+      pos.x = touch.pageX;
+      pos.y = touch.pageY;
 
-      var createFling = function () {
-        startPoint = Drag.points[ Drag.points.length - Fling.MIN_POINTS ];
-        flingVector = Drag.registerVector(startPoint, point);
-        flingLength = flingVector.length * (flingVector.duration / 50);
-
-        flingData.startX  = pos.x;
-        flingData.finishX = pos.x + (flingVector.dir[0] * flingLength);
-        flingData.startY  = pos.y;
-        flingData.finishY = pos.y + (flingVector.dir[1] * flingLength);
-
-        Fling.start(flingData, positionElement);
-      };
-
-      var constrainPos = function (pos, checkResult) {
-        pos.x = checkResult.x === -1 ?
-          checkResult.limits.minX : checkResult.x === 1 ?
-          checkResult.limits.maxX : pos.x;
-
-        pos.y = checkResult.y === -1 ?
-          checkResult.limits.minY : checkResult.y === 1 ?
-          checkResult.limits.maxY : pos.y;
-
-        return pos;
-      };
-
-      var onMousedown = function (e) {
-        // Start with a clean sheet
-        Fling.cancel();
-        Drag.clearData();
-
-        elementRect = element[0].getBoundingClientRect();
-
-        pos.x = elementRect.left;
-        pos.y = elementRect.top;
-
-        Limit.$set(elementRect, $parent[0].getBoundingClientRect());
-
-        point = Drag.registerPoint({ x: e.pageX, y: e.pageY });
-
-        $document.on('mousemove', onMousemove); // Fires ~15ms
-        $document.on('mouseup', onMouseup);
-      };
-
-      var onMousemove = function (e) {
-        _point = { x: e.pageX, y: e.pageY };
-
-        vector = Drag.registerVector(point, _point);
-        point  = Drag.registerPoint(_point); // New, latest point
-
-        pos.x = pos.x + vector.x;
-        pos.y = pos.y + vector.y;
-
-        pos = constrainPos(pos, Limit.check(pos.x, pos.y));
-
-        positionElement(pos.x, pos.y);
-      };
-
-      var onMouseup = function () {
-        if(!!point) {
-          idleTime = $window.Date.now() - point.time;
-
-          if(Fling.decide(idleTime, Drag.points.length)) {
-            createFling();
-          }
-        }
-
-        $document.off('mousemove', onMousemove);
-        $document.off('mouseup', onMouseup);
-      };
-
-      element.on('mousedown', onMousedown);
-
-      var getCoords = function (e) {
-        var touches = !!e.touches && e.touches.length > 0;
-        var touch = !!e.changedTouches && e.changedTouches[0] || touches[0];
-
-        return touch;
-      };
-
-      element.on('touchstart', function (e) {
-        onMousedown(getCoords(e));
-      });
-
-      element.on('touchmove', function (e) {
-        onMousemove(getCoords(e));
-      });
-
-      element.on('touchend touchcancel', function (e) {
-        onMouseup(getCoords(e));
-      });
-
+      return pos;
     }
   };
-});
+})
+
+.directive('draggable',
+  function ($document, $window, Drag, Fling, Limit, Input) {
+    return {
+      restrict: 'A',
+      link: function(scope, element) {
+        var $parent = element.parent();
+        var pos = {};
+        var flingData = {};
+
+        var elementRect, vector, point, _point;
+        var idleTime, startPoint, flingVector, flingLength;
+
+        var positionElement = function (left, top) {
+          element.css({
+            left: left + 'px',
+            top: top + 'px'
+          });
+        };
+
+        var createFling = function () {
+          startPoint = Drag.points[ Drag.points.length - Fling.MIN_POINTS ];
+          flingVector = Drag.registerVector(startPoint, point);
+          flingLength = flingVector.length * (flingVector.duration / 50);
+
+          flingData.startX  = pos.x;
+          flingData.finishX = pos.x + (flingVector.dir[0] * flingLength);
+          flingData.startY  = pos.y;
+          flingData.finishY = pos.y + (flingVector.dir[1] * flingLength);
+
+          Fling.start(flingData, positionElement);
+        };
+
+        var constrainPos = function (pos, checkResult) {
+          pos.x = checkResult.x === -1 ?
+            checkResult.limits.minX : checkResult.x === 1 ?
+            checkResult.limits.maxX : pos.x;
+
+          pos.y = checkResult.y === -1 ?
+            checkResult.limits.minY : checkResult.y === 1 ?
+            checkResult.limits.maxY : pos.y;
+
+          return pos;
+        };
+
+        var onStart = function (e) {
+          Fling.cancel(); // Start with a clean sheet
+          Drag.clearData();
+
+          elementRect = element[0].getBoundingClientRect();
+
+          pos.x = elementRect.left;
+          pos.y = elementRect.top;
+
+          Limit.$set(elementRect, $parent[0].getBoundingClientRect());
+
+          point = Drag.registerPoint(Input.getPos(e));
+
+          toggleHandlers('on');
+        };
+
+        var onMove = function (e) {
+          _point = Input.getPos(e);
+
+          vector = Drag.registerVector(point, _point);
+          point  = Drag.registerPoint(_point); // New, latest point
+
+          pos.x = pos.x + vector.x;
+          pos.y = pos.y + vector.y;
+
+          pos = constrainPos(pos, Limit.check(pos.x, pos.y));
+
+          positionElement(pos.x, pos.y);
+        };
+
+        var onEnd = function () {
+          if(!!point) {
+            idleTime = $window.Date.now() - point.time;
+
+            if(Fling.decide(idleTime, Drag.points.length)) {
+              createFling();
+            }
+          }
+
+          toggleHandlers('off');
+        };
+
+        var toggleHandlers = function (state) {
+          $document[state]('mousemove touchmove', onMove);
+          $document[state]('mouseup touchend', onEnd);
+        };
+
+        element.on('mousedown touchstart', onStart);
+      }
+    };
+  }
+);

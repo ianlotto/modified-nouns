@@ -2,7 +2,14 @@
 
 angular.module('modifiedNouns.drag', [])
 
-.factory('Drag', function ($window) {
+.factory('Drag', function ($window, $document, Input) {
+
+  var EVENTS = {
+    start: 'mousedown touchstart',
+    move: 'mousemove touchmove',
+    end: 'mouseup touchend'
+  };
+
   var point, vector, diffX, diffY, finishTime, length, duration;
 
   return {
@@ -71,56 +78,79 @@ angular.module('modifiedNouns.drag', [])
       this._register(vector, this.vectors);
 
       return vector;
+    },
+
+    bindHandlers: function (element, handlers) {
+
+      var onStart = function (e) {
+        handlers.onStart(Input.getPos(e));
+
+        $document.on(EVENTS.move, onMove);
+        $document.on(EVENTS.end, onEnd);
+      };
+
+      var onMove = function (e) {
+        handlers.onMove(Input.getPos(e));
+      };
+
+      var onEnd = function () {
+        handlers.onEnd();
+
+        $document.off(EVENTS.move, onMove);
+        $document.off(EVENTS.end, onEnd);
+      };
+
+      element.on(EVENTS.start, onStart);
     }
   };
 
 })
 
-.directive('draggable',
-  function ($document, $window, Drag, Fling, Limit, Input) {
-    return {
-      restrict: 'A',
-      link: function(scope, element) {
-        var $parent = element.parent();
-        var pos = {};
-        var flingData = {};
+.directive('drag', function ($window, Drag, Fling, Limit) {
+  return {
+    restrict: 'A',
+    link: function(scope, element) {
+      var $parent = element.parent();
+      var pos = {};
+      var flingData = {};
 
-        var elementRect, vector, point, _point;
-        var idleTime, startPoint, flingVector, flingLength;
+      var elementRect, vector, point;
+      var idleTime, startPoint, flingVector, flingLength;
 
-        var positionElement = function (left, top) {
-          element.css({
-            left: left + 'px',
-            top: top + 'px'
-          });
-        };
+      var positionElement = function (left, top) {
+        element.css({
+          left: left + 'px',
+          top: top + 'px'
+        });
+      };
 
-        var createFling = function () {
-          startPoint = Drag.points[ Drag.points.length - Fling.MIN_POINTS ];
-          flingVector = Drag.registerVector(startPoint, point);
-          flingLength = flingVector.length * (flingVector.duration / 50);
+      var createFling = function () {
+        startPoint = Drag.points[ Drag.points.length - Fling.MIN_POINTS ];
+        flingVector = Drag.registerVector(startPoint, point);
+        flingLength = flingVector.length * (flingVector.duration / 50);
 
-          flingData.startX  = pos.x;
-          flingData.finishX = pos.x + (flingVector.dir[0] * flingLength);
-          flingData.startY  = pos.y;
-          flingData.finishY = pos.y + (flingVector.dir[1] * flingLength);
+        flingData.startX  = pos.x;
+        flingData.finishX = pos.x + (flingVector.dir[0] * flingLength);
+        flingData.startY  = pos.y;
+        flingData.finishY = pos.y + (flingVector.dir[1] * flingLength);
 
-          Fling.start(flingData, positionElement);
-        };
+        Fling.start(flingData, positionElement);
+      };
 
-        var constrainPos = function (pos, checkResult) {
-          pos.x = checkResult.x === -1 ?
-            checkResult.limits.minX : checkResult.x === 1 ?
-            checkResult.limits.maxX : pos.x;
+      var constrainPos = function (pos, checkResult) {
+        pos.x = checkResult.x === -1 ?
+          checkResult.limits.minX : checkResult.x === 1 ?
+          checkResult.limits.maxX : pos.x;
 
-          pos.y = checkResult.y === -1 ?
-            checkResult.limits.minY : checkResult.y === 1 ?
-            checkResult.limits.maxY : pos.y;
+        pos.y = checkResult.y === -1 ?
+          checkResult.limits.minY : checkResult.y === 1 ?
+          checkResult.limits.maxY : pos.y;
 
-          return pos;
-        };
+        return pos;
+      };
 
-        var onStart = function (e) {
+      Drag.bindHandlers(element, {
+        onStart: function (eventPos) {
           Fling.cancel(); // Start with a clean sheet
           Drag.clearData();
 
@@ -131,17 +161,12 @@ angular.module('modifiedNouns.drag', [])
 
           Limit.$set(elementRect, $parent[0].getBoundingClientRect());
 
-          point = Drag.registerPoint(Input.getPos(e));
-
-          toggleHandlers('on');
-        };
-
-        //TODO: stickiness on window resize
-        var onMove = function (e) {
-          _point = Input.getPos(e);
-
-          vector = Drag.registerVector(point, _point);
-          point  = Drag.registerPoint(_point); // New, latest point
+          point = Drag.registerPoint(eventPos);
+        },
+        // TODO: stickiness on window resize
+        onMove: function (eventPos) {
+          vector = Drag.registerVector(point, eventPos);
+          point  = Drag.registerPoint(eventPos); // New, latest point
 
           pos.x = pos.x + vector.x;
           pos.y = pos.y + vector.y;
@@ -149,9 +174,8 @@ angular.module('modifiedNouns.drag', [])
           pos = constrainPos(pos, Limit.check(pos.x, pos.y));
 
           positionElement(pos.x, pos.y);
-        };
-
-        var onEnd = function () {
+        },
+        onEnd: function () {
           if(!!point) {
             idleTime = $window.Date.now() - point.time;
 
@@ -159,17 +183,8 @@ angular.module('modifiedNouns.drag', [])
               createFling();
             }
           }
-
-          toggleHandlers('off');
-        };
-
-        var toggleHandlers = function (state) {
-          $document[state]('mousemove touchmove', onMove);
-          $document[state]('mouseup touchend', onEnd);
-        };
-
-        element.on('mousedown touchstart', onStart);
-      }
-    };
-  }
-);
+        }
+      });
+    }
+  };
+});

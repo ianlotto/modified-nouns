@@ -211,7 +211,6 @@ angular.module('modifiedNouns.input', [])
         Fling.start(flingData, positionElement);
       };
 
-      // TODO: stickiness on window resize
       var constrainPos = function (pos, checkResult) {
         pos.x = checkResult.x === -1 ?
           checkResult.limits.minX : checkResult.x === 1 ?
@@ -225,8 +224,6 @@ angular.module('modifiedNouns.input', [])
       };
 
       var onMousedown = function (e) {
-        e.preventDefault();
-
         // Start with a clean sheet
         Fling.cancel();
         Drag.clearData();
@@ -272,6 +269,26 @@ angular.module('modifiedNouns.input', [])
       };
 
       element.on('mousedown', onMousedown);
+
+      var getCoords = function (e) {
+        var touches = !!e.touches && e.touches.length > 0;
+        var touch = !!e.changedTouches && e.changedTouches[0] || touches[0];
+
+        return touch;
+      };
+
+      element.on('touchstart', function (e) {
+        onMousedown(getCoords(e));
+      });
+
+      element.on('touchmove', function (e) {
+        onMousemove(getCoords(e));
+      });
+
+      element.on('touchend touchcancel', function (e) {
+        onMouseup(getCoords(e));
+      });
+
     }
   };
 });

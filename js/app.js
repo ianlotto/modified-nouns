@@ -89,7 +89,11 @@ angular.module('modifiedNouns', [
   };
 })
 
-.run(function (Loader) {
+.run(function ($window, Loader) {
+  angular.element($window).on('touchmove', function (e) {
+    e.preventDefault(); // Prevent window scrolling / bouncing
+  });
+
   Loader.getModifiedNouns();
   Loader.getImages();
 });

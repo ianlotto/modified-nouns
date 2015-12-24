@@ -38,9 +38,9 @@ button {
   left: 0;
   z-index: 1;
   opacity: 1;
-  
+
   background: linear-gradient(90deg, transparent, rgb(50,50,50) 90%, transparent);
-  
+
 }
 
 [load-progress].complete {

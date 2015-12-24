@@ -2,6 +2,7 @@
 
 angular.module('modifiedNouns', [
   'modifiedNouns.input',
+  'modifiedNouns.drag',
   'modifiedNouns.fullscreen',
   'modifiedNouns.loader'
 ])

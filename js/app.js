@@ -2,6 +2,7 @@
 
 angular.module('modifiedNouns', [
   'modifiedNouns.input',
+  'modifiedNouns.geometry',
   'modifiedNouns.drag',
   'modifiedNouns.fling',
   'modifiedNouns.fullscreen',

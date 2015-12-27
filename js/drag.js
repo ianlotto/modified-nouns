@@ -2,7 +2,7 @@
 
 angular.module('modifiedNouns.drag', [])
 
-.factory('Drag', function ($window, $document, Input) {
+.factory('Drag', function ($document, Input) {
 
   var EVENTS = {
     start: 'mousedown touchstart',
@@ -10,76 +10,7 @@ angular.module('modifiedNouns.drag', [])
     end: 'mouseup touchend'
   };
 
-  var point, vector, diffX, diffY, finishTime, length, duration;
-
   return {
-    points: [],
-    vectors: [],
-
-    _register: function (item, array) {
-      array.push(item);
-
-      if(array.length > 10) {
-        array.shift();
-      }
-    },
-
-    getLength: function (a, b) {
-      return $window.Math.sqrt(
-        $window.Math.pow(a, 2) + $window.Math.pow(b, 2)
-      );
-    },
-
-    clearData: function () {
-      while (this.points.length > 0 || this.vectors.length > 0) {
-        this.points.pop();
-        this.vectors.pop();
-      }
-    },
-
-    registerPoint: function (data) {
-      point = {
-        x: data.x,
-        y: data.y,
-        time: $window.Date.now()
-      };
-
-      this._register(point, this.points);
-
-      return point;
-    },
-
-    registerVector: function (startPoint, finishPoint) {
-      finishTime = $window.Date.now();
-      duration = finishTime - startPoint.time;
-
-      diffX = finishPoint.x - startPoint.x;
-      diffY = finishPoint.y - startPoint.y;
-      length = this.getLength(diffX, diffY);
-
-      vector = {
-        x: diffX,
-        y: diffY,
-        startX: startPoint.x,
-        startY: startPoint.y,
-        finishX: finishPoint.x,
-        finishY: finishPoint.y,
-
-        length: length,
-        dir: [diffX / length, diffY / length],
-
-        startTime: startPoint.time,
-        finishTime: finishTime,
-        duration: duration,
-
-        rate: length / duration
-      };
-
-      this._register(vector, this.vectors);
-
-      return vector;
-    },
-
     bindHandlers: function (element, handlers) {
 
       var onStart = function (e) {
@@ -106,7 +37,7 @@ angular.module('modifiedNouns.drag', [])
 
 })
 
-.directive('drag', function ($window, Drag, Fling, Limit) {
+.directive('drag', function ($window, Geometry, Drag, Fling, Limit) {
   return {
     restrict: 'A',
     link: function(scope, element) {
@@ -125,8 +56,8 @@ angular.module('modifiedNouns.drag', [])
       };
 
       var createFling = function () {
-        startPoint = Drag.points[ Drag.points.length - Fling.MIN_POINTS ];
-        flingVector = Drag.registerVector(startPoint, point);
+        startPoint = Geometry.points[ Geometry.points.length - Fling.MIN_POINTS ];
+        flingVector = Geometry.registerVector(startPoint, point);
         flingLength = flingVector.length * (flingVector.duration / 50);
 
         flingData.startX  = pos.x;
@@ -152,7 +83,7 @@ angular.module('modifiedNouns.drag', [])
       Drag.bindHandlers(element, {
         onStart: function (eventPos) {
           Fling.cancel(); // Start with a clean sheet
-          Drag.clearData();
+          Geometry.clearData();
 
           elementRect = element[0].getBoundingClientRect();
 
@@ -161,12 +92,12 @@ angular.module('modifiedNouns.drag', [])
 
           Limit.$set(elementRect, $parent[0].getBoundingClientRect());
 
-          point = Drag.registerPoint(eventPos);
+          point = Geometry.registerPoint(eventPos);
         },
         // TODO: stickiness on window resize
         onMove: function (eventPos) {
-          vector = Drag.registerVector(point, eventPos);
-          point  = Drag.registerPoint(eventPos); // New, latest point
+          vector = Geometry.registerVector(point, eventPos);
+          point  = Geometry.registerPoint(eventPos); // New, latest point
 
           pos.x = pos.x + vector.x;
           pos.y = pos.y + vector.y;
@@ -179,7 +110,7 @@ angular.module('modifiedNouns.drag', [])
           if(!!point) {
             idleTime = $window.Date.now() - point.time;
 
-            if(Fling.decide(idleTime, Drag.points.length)) {
+            if(Fling.decide(idleTime, Geometry.points.length)) {
               createFling();
             }
           }

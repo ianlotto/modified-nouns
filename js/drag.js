@@ -33,7 +33,6 @@ angular.module('modifiedNouns.drag', [])
     point = Geometry.registerPoint(eventPos);
   };
 
-  // TODO: stickiness on window resize
   var onMove = function (element, eventPos) {
     vector = Geometry.registerVector(point, eventPos);
     point  = Geometry.registerPoint(eventPos); // New, latest point

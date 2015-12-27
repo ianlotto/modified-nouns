@@ -2,7 +2,7 @@
 
 angular.module('modifiedNouns.drag', [])
 
-.factory('Drag', function ($document, Geometry, Limit, Input, positionElement) {
+.factory('Drag', function ($document, Geometry, Limit, Input, positionEl) {
 
   var pos = {};
 
@@ -43,7 +43,7 @@ angular.module('modifiedNouns.drag', [])
 
     pos = constrainPos(pos, Limit.check(pos.x, pos.y));
 
-    positionElement(element, pos.x, pos.y);
+    positionEl(element, pos.x, pos.y);
   };
 
   return {

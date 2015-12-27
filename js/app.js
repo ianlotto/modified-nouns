@@ -9,7 +9,7 @@ angular.module('modifiedNouns', [
   'modifiedNouns.loader'
 ])
 
-.factory('positionElement', function () {
+.factory('positionEl', function () {
   return function (element, left, top) {
     element.css({
       left: left + 'px',

@@ -33,6 +33,13 @@ angular.module('modifiedNouns.input', [])
   var touch, changedTouch;
 
   return {
+
+    EVENTS: {
+      start: 'mousedown touchstart',
+      move: 'mousemove touchmove',
+      end: 'mouseup touchend'
+    },
+
     // Normalize between mouse and touch
     getPos: function (e) {
       touch = (!!e.touches && e.touches.length > 0 && e.touches[0]) || e;

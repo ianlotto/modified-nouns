@@ -9,6 +9,15 @@ angular.module('modifiedNouns', [
   'modifiedNouns.loader'
 ])
 
+.factory('positionElement', function () {
+  function (element, left, top) {
+    element.css({
+      left: left + 'px',
+      top: top + 'px'
+    });
+  };
+})
+
 .directive('loadProgress', function (Loader) {
   return {
     restrict: 'A',

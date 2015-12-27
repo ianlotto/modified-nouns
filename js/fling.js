@@ -2,7 +2,7 @@
 
 angular.module('modifiedNouns.fling', [])
 
-.factory('Fling', function ($window, $interval, Limit) {
+.factory('Fling', function ($window, $interval, Limit, positionElement) {
   var FREQUENCY = 10;
   var DURATION = 1000;
   var BOUNCE_DAMPER = 0.25;
@@ -41,7 +41,7 @@ angular.module('modifiedNouns.fling', [])
     return pos;
   };
 
-  var increment = function (data, callback) {
+  var increment = function (data, element) {
     i++;
 
     easeFactor = easeOut(i * FREQUENCY, DURATION, 3);
@@ -51,7 +51,7 @@ angular.module('modifiedNouns.fling', [])
 
     pos = bouncePos(pos, Limit.check(pos.x, pos.y));
 
-    callback(pos.x, pos.y);
+    positionElement(element, pos.x, pos.y);
   };
 
   return {
@@ -62,11 +62,11 @@ angular.module('modifiedNouns.fling', [])
       return idleTime <= MAX_IDLE_TIME && numPoints >= MIN_POINTS;
     },
 
-    start: function (data, callback) {
+    start: function (data, element) {
       i = 0;
 
-      increment(data, callback);
-      cancel = $interval(increment, FREQUENCY, COUNT, false, data, callback);
+      increment(data, element);
+      cancel = $interval(increment, FREQUENCY, COUNT, false, data, element);
 
       return cancel;
     },
@@ -76,6 +76,56 @@ angular.module('modifiedNouns.fling', [])
         $interval.cancel(cancel);
         cancel = undefined;
       }
+    }
+  };
+
+})
+
+.directive('fling', function ($window, $document, Geometry, Input, Fling) {
+
+  return {
+    restrict: 'A',
+    link: function (scope, element) {
+      var flingData = {};
+
+      var idleTime, lastPoint, startPoint, flingVector, flingLength;
+
+      var createFling = function (startPoint, lasPoint) {
+        flingVector = Geometry.registerVector(startPoint, lasPoint);
+        flingLength = flingVector.length * (flingVector.duration / 50);
+
+        flingData.startX  = pos.x;
+        flingData.finishX = pos.x + (flingVector.dir[0] * flingLength);
+        flingData.startY  = pos.y;
+        flingData.finishY = pos.y + (flingVector.dir[1] * flingLength);
+
+        Fling.start(flingData, element);
+      };
+
+      var onStart = function () {
+        Fling.cancel();
+        $document.on(Input.EVENTS.end, onEnd);
+      };
+
+      var onEnd = function () {
+        lastPoint = Geometry.points[ Geometry.points.length - 1 ];
+
+        if(!!lastPoint) {
+          idleTime = $window.Date.now() - lastPoint.time;
+
+          if(Fling.decide(idleTime, Geometry.points.length)) {
+            startPoint = Geometry.points[
+              Geometry.points.length - Fling.MIN_POINTS
+            ];
+
+            createFling(startPoint, lasPoint);
+          }
+        }
+
+        $document.off(Input.EVENTS.end, onEnd);
+      };
+
+      element.on(Input.EVENTS.start, onStart);
     }
   };
 

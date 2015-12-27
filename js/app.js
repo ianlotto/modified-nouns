@@ -10,7 +10,7 @@ angular.module('modifiedNouns', [
 ])
 
 .factory('positionElement', function () {
-  function (element, left, top) {
+  return function (element, left, top) {
     element.css({
       left: left + 'px',
       top: top + 'px'

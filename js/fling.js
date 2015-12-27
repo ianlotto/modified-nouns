@@ -88,16 +88,18 @@ angular.module('modifiedNouns.fling', [])
     link: function (scope, element) {
       var flingData = {};
 
-      var idleTime, lastPoint, startPoint, flingVector, flingLength;
+      var idleTime, lastPoint, startPoint, elRect, flingVector, flingLength;
 
       var createFling = function (startPoint, lasPoint) {
         flingVector = Geometry.registerVector(startPoint, lasPoint);
         flingLength = flingVector.length * (flingVector.duration / 50);
 
-        flingData.startX  = pos.x;
-        flingData.finishX = pos.x + (flingVector.dir[0] * flingLength);
-        flingData.startY  = pos.y;
-        flingData.finishY = pos.y + (flingVector.dir[1] * flingLength);
+        elRect = element[0].getBoundingClientRect();
+
+        flingData.startX  = elRect.left;
+        flingData.finishX = elRect.left + (flingVector.dir[0] * flingLength);
+        flingData.startY  = elRect.top;
+        flingData.finishY = elRect.top + (flingVector.dir[1] * flingLength);
 
         Fling.start(flingData, element);
       };
@@ -118,7 +120,7 @@ angular.module('modifiedNouns.fling', [])
               Geometry.points.length - Fling.MIN_POINTS
             ];
 
-            createFling(startPoint, lasPoint);
+            createFling(startPoint, lastPoint);
           }
         }
 

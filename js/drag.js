@@ -46,8 +46,6 @@ angular.module('modifiedNouns.drag', [])
   };
 
   return {
-    sessionId: null,
-
     bind: function (element) {
 
       element.on(Input.EVENTS.start, function (e) {

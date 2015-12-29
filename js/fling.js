@@ -3,7 +3,9 @@
 angular.module('modifiedNouns.fling', [])
 
 .factory('Fling',
-  function ($window, $document, $interval, Geometry, Limit, Input, positionEl) {
+  function (
+    $window, $document, $interval, $timeout,
+    Geometry, Limit, Input, positionEl) {
 
     var FREQUENCY = 10;
     var DURATION = 1000;
@@ -106,13 +108,16 @@ angular.module('modifiedNouns.fling', [])
           if(!!lastPoint) {
             idleTime = $window.Date.now() - lastPoint.time;
 
-            if(decide(idleTime, Geometry.points.length)) {
-              startPoint = Geometry.points[
-                Geometry.points.length - MIN_POINTS
-              ];
+            // Allow for possible change in Input.dragging state
+            $timeout(function () {
+              if(!Input.dragging && decide(idleTime, Geometry.points.length)) {
+                startPoint = Geometry.points[
+                  Geometry.points.length - MIN_POINTS
+                ];
 
-              create(element, startPoint, lastPoint);
-            }
+                create(element, startPoint, lastPoint);
+              }
+            });
           }
 
           $document.off(Input.EVENTS.end, onEnd);

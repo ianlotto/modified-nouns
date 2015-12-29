@@ -45,24 +45,48 @@ angular.module('modifiedNouns.drag', [])
     positionEl(element, pos.x, pos.y);
   };
 
-  return {
-    bind: function (element) {
+  var posData, sessionId;
 
+  return {
+    sessionId: null,
+
+    bind: function (element) {
       element.on(Input.EVENTS.start, function (e) {
-        onStart(element, Input.getPos(e));
+        // Allow only one drag session at a time
+        if(angular.isNumber(sessionId)) {
+          return;
+        }
+
+        Input.dragging = true;
+
+        posData = Input.getPos(e);
+        sessionId = posData.id;
+
+        onStart(element, posData);
 
         $document.on(Input.EVENTS.move, _onMove);
         $document.on(Input.EVENTS.end, _onEnd);
       });
 
       var _onMove = function (e) {
-        onMove(element, Input.getPos(e));
+
+        posData = sessionId === 'mousedown' ? Input.getPos(e) : Input.activeTouches[sessionId];
+
+        if(!!posData) {
+          onMove(element, posData);
+        }
       };
 
-      var _onEnd = function () {
-        $document.off(Input.EVENTS.move, _onMove);
-        $document.off(Input.EVENTS.end, _onEnd);
+      var _onEnd = function (e) {
+        if(!Input.activeTouches[sessionId] || sessionId === 'mousedown') {
+          Input.dragging = false;
+          sessionId = null;
+
+          $document.off(Input.EVENTS.move, _onMove);
+          $document.off(Input.EVENTS.end, _onEnd);
+        }
       };
+
     }
   };
 

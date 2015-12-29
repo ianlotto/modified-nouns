@@ -98,7 +98,6 @@ angular.module('modifiedNouns.input', [])
 
   return {
     EVENTS: EVENTS,
-    dragging: false,
     activeTouches: activeTouches,
     getTouches: getTouches
   };

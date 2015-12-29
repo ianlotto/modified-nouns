@@ -32,14 +32,15 @@ angular.module('modifiedNouns.input', [])
 
   var touch, changedTouch, touches;
 
-  //PROBLEM:
+  // PROBLEM:
 
-  //Differentiate between dragging and zooming with touch
-  //Google maps can handle both at the same time
+  // Differentiate between dragging and zooming with touch
+  // Google maps can handle both at the same time
 
-  //If one touch present, we're just dragging and we're done
+  // If one touch present, we're just dragging and we're done
 
-  //If more than two touches are present, use the first two in the array and draw a line between them on each touchmove.
+  // If more than two touches are present, use the first two in the array
+  // and draw a line between them on each touchmove.
 
   // Measure first touch in array for getting the dragging
   // Measure its change in length for getting the zooming

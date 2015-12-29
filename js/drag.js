@@ -70,14 +70,15 @@ angular.module('modifiedNouns.drag', [])
 
       var _onMove = function (e) {
 
-        posData = sessionId === 'mousedown' ? Input.getPos(e) : Input.activeTouches[sessionId];
+        posData = sessionId === 'mousedown' ?
+          Input.getPos(e) : Input.activeTouches[sessionId];
 
         if(!!posData) {
           onMove(element, posData);
         }
       };
 
-      var _onEnd = function (e) {
+      var _onEnd = function () {
         if(!Input.activeTouches[sessionId] || sessionId === 'mousedown') {
           Input.dragging = false;
           sessionId = null;

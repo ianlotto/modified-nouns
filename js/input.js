@@ -44,12 +44,8 @@ angular.module('modifiedNouns.input', [])
     _touch = {
       x:  input.pageX,
       y: input.pageY,
-      id: input.identifier
+      id: input.identifier || (mouseExp.test(input.type) ? 'mouse' : null)
     };
-
-    if(!_touch.id) {
-      _touch.id = mouseExp.test(input.type) ? 'mouse' : null;
-    }
 
     return _touch;
   };

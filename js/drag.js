@@ -6,7 +6,7 @@ angular.module('modifiedNouns.drag', [])
 
   var pos = {};
 
-  var elementRect, vector, point;
+  var elementRect, vector, point, eventData, sessionId;
 
   var constrainPos = function (pos, checkResult) {
     pos.x = checkResult.x === -1 ?
@@ -45,12 +45,11 @@ angular.module('modifiedNouns.drag', [])
     positionEl(element, pos.x, pos.y);
   };
 
-  var eventData, sessionId;
-
   return {
     sessionId: null,
 
     bind: function (element) {
+
       element.on(Input.EVENTS.start, function (e) {
         if(!!sessionId) { return; } // Allow only one drag session at a time
 
@@ -77,15 +76,36 @@ angular.module('modifiedNouns.drag', [])
       };
 
       var _onEnd = function () {
-        // TODO: start a drag session with another touch if it's there
         if(!Input.activeTouches[sessionId]) {
-          sessionId = null;
 
-          $document.triggerHandler('dragend');
+          if(Input.activeTouches.length > 0) {
+            _delegateDrag();
+          } else {
+            _endDrag();
+          }
 
-          $document.off(Input.EVENTS.move, _onMove);
-          $document.off(Input.EVENTS.end, _onEnd);
         }
+      };
+
+      var _delegateDrag = function () {
+        for (var id in Input.activeTouches) {
+          if(Input.activeTouches.hasOwnProperty(id)) {
+            // Delegate drag session to another active touch
+            sessionId = id;
+            onStart(element, Input.activeTouches[id]);
+
+            return;
+          }
+        }
+      };
+
+      var _endDrag = function () {
+        sessionId = null;
+
+        $document.triggerHandler('dragend');
+
+        $document.off(Input.EVENTS.move, _onMove);
+        $document.off(Input.EVENTS.end, _onEnd);
       };
 
     }

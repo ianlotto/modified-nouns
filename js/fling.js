@@ -75,7 +75,7 @@ angular.module('modifiedNouns.fling', [])
 })
 
 .factory('Fling',
-  function ($window, $document, $timeout, Geometry, Input, FlingAnimation) {
+  function ($window, $document, Geometry, Input, FlingAnimation) {
 
     var MAX_IDLE_TIME = 25;
     var MIN_POINTS = 6;
@@ -104,44 +104,31 @@ angular.module('modifiedNouns.fling', [])
 
     return {
       bind: function (element) {
-        var sessionId, eventData;
 
         element.on(Input.EVENTS.start, function (e) {
           FlingAnimation.stop();
+        });
 
-          // TODO: better solution than this...
-          // custom event, maybe triggerHandler?
-          if(!sessionId) {
-            eventData = Input.getTouches(e)[0];
-            sessionId = !!eventData && eventData.id;
-            $document.on(Input.EVENTS.end, onEnd);
-          }
+        element.on('dragstart', function (e) {
+          $document.on('dragend', onEnd);
         });
 
         var onEnd = function (e) {
-          eventData = Input.getTouches(e)[0];
-
-          if(eventData.id !== sessionId) { return; }
-
           lastPoint = Geometry.points[ Geometry.points.length - 1 ];
 
           if(!!lastPoint) {
             idleTime = $window.Date.now() - lastPoint.time;
 
-            // Allow for possible change in Input.dragging state
-            $timeout(function () {
-              if(!Input.dragging && decide(idleTime, Geometry.points.length)) {
-                startPoint = Geometry.points[
-                  Geometry.points.length - MIN_POINTS
-                ];
+            if(decide(idleTime, Geometry.points.length)) {
+              startPoint = Geometry.points[
+                Geometry.points.length - MIN_POINTS
+              ];
 
-                create(element, startPoint, lastPoint);
-              }
-            });
+              create(element, startPoint, lastPoint);
+            }
           }
 
-          sessionId = null;
-          $document.off(Input.EVENTS.end, onEnd);
+          $document.off('dragend', onEnd);
         };
 
       }

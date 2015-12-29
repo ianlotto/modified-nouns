@@ -26,28 +26,46 @@ angular.module('modifiedNouns.input', [])
 
 })
 
-// TODO: differentiate between single and multi touch events
 .factory('Input', function ($window, $document) {
+
+  var EVENTS = {
+    start: 'mousedown touchstart',
+    move: 'mousemove touchmove',
+    end: 'mouseup touchend touchcancel'
+  };
+
   var activeTouches = { length: 0 };
+  var mouseExp = /^mouse/i;
 
-  var touch, changedTouch, touches;
+  var touches, _touches, touch, _touch;
 
-  // PROBLEM:
+  // Normalize between mouse and touch
+  var createTouch = function (input) {
+    _touch = {
+      x:  input.pageX,
+      y: input.pageY,
+      id: input.identifier
+    };
 
-  // Differentiate between dragging and zooming with touch
-  // Google maps can handle both at the same time
+    if(!_touch.id) {
+      _touch.id = mouseExp.test(input.type) ? 'mouse' : null;
+    }
 
-  // If one touch present, we're just dragging and we're done
-
-  // If more than two touches are present, use the first two in the array
-  // and draw a line between them on each touchmove.
-
-  // Measure first touch in array for getting the dragging
-  // Measure its change in length for getting the zooming
+    return _touch;
+  };
 
   var getTouches = function (e) {
-    touches = e.changedTouches;
-    return (!!touches && touches.length > 0 && touches) || null;
+    _touches = [];
+
+    if(!!e.changedTouches && e.changedTouches.length > 0) {
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        _touches[i] = createTouch(e.changedTouches[i]);
+      }
+    } else {
+      _touches = [createTouch(e)];
+    }
+
+    return _touches;
   };
 
   var updateActiveTouches = function (e, destroy) {
@@ -57,50 +75,31 @@ angular.module('modifiedNouns.input', [])
       touch = touches[i];
 
       if(destroy) {
-        delete activeTouches[touch.identifier];
+        delete activeTouches[touch.id];
       } else {
-        activeTouches[touch.identifier] = { x:  touch.pageX, y: touch.pageY };
+        activeTouches[touch.id] = touch;
       }
     }
 
     activeTouches.length = $window.Object.keys(activeTouches).length - 1;
   };
 
-  $document.on('touchstart', function (e) {
+  $document.on(EVENTS.start, function (e) {
     updateActiveTouches(e);
   });
 
-  $document.on('touchmove', function (e) {
+  $document.on(EVENTS.move, function (e) {
     updateActiveTouches(e);
   });
 
-  $document.on('touchend touchcancel', function (e) {
+  $document.on(EVENTS.end, function (e) {
     updateActiveTouches(e, true);
   });
 
   return {
-
-    EVENTS: {
-      start: 'mousedown touchstart',
-      move: 'mousemove touchmove',
-      end: 'mouseup touchend'
-    },
-
+    EVENTS: EVENTS,
     dragging: false,
     activeTouches: activeTouches,
-
-    // Normalize between mouse and touch
-    getPos: function (e) {
-      touch = (!!e.touches && e.touches.length > 0 && e.touches[0]) || e;
-      changedTouch = !!e.changedTouches && e.changedTouches[0];
-
-      touch = changedTouch || touch;
-
-      return {
-        id: touch.identifier || touch.type,
-        x:  touch.pageX,
-        y:  touch.pageY
-      };
-    }
+    getTouches: getTouches
   };
 });

@@ -45,41 +45,39 @@ angular.module('modifiedNouns.drag', [])
     positionEl(element, pos.x, pos.y);
   };
 
-  var posData, sessionId;
+  var eventData, sessionId;
 
   return {
     sessionId: null,
 
     bind: function (element) {
       element.on(Input.EVENTS.start, function (e) {
-        // Allow only one drag session at a time
-        if(angular.isNumber(sessionId)) {
-          return;
+        if(!!sessionId) { return; } // Allow only one drag session at a time
+
+        eventData = Input.getTouches(e)[0];
+
+        if(!!eventData) {
+          Input.dragging = true;
+          sessionId = eventData.id;
+
+          onStart(element, eventData);
+
+          $document.on(Input.EVENTS.move, _onMove);
+          $document.on(Input.EVENTS.end, _onEnd);
         }
-
-        Input.dragging = true;
-
-        posData = Input.getPos(e);
-        sessionId = posData.id;
-
-        onStart(element, posData);
-
-        $document.on(Input.EVENTS.move, _onMove);
-        $document.on(Input.EVENTS.end, _onEnd);
       });
 
       var _onMove = function (e) {
+        eventData = Input.activeTouches[sessionId];
 
-        posData = sessionId === 'mousedown' ?
-          Input.getPos(e) : Input.activeTouches[sessionId];
-
-        if(!!posData) {
-          onMove(element, posData);
+        if(!!eventData) {
+          onMove(element, eventData);
         }
       };
 
       var _onEnd = function () {
-        if(!Input.activeTouches[sessionId] || sessionId === 'mousedown') {
+        // TODO: start a drag session with another touch if it's there
+        if(!Input.activeTouches[sessionId]) {
           Input.dragging = false;
           sessionId = null;
 

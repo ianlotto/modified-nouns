@@ -105,15 +105,15 @@ angular.module('modifiedNouns.fling', [])
     return {
       bind: function (element) {
 
-        element.on(Input.EVENTS.start, function (e) {
+        element.on(Input.EVENTS.start, function () {
           FlingAnimation.stop();
         });
 
-        element.on('dragstart', function (e) {
+        element.on('dragstart', function () {
           $document.on('dragend', onEnd);
         });
 
-        var onEnd = function (e) {
+        var onEnd = function () {
           lastPoint = Geometry.points[ Geometry.points.length - 1 ];
 
           if(!!lastPoint) {

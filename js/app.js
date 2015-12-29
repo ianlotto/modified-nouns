@@ -5,6 +5,7 @@ angular.module('modifiedNouns', [
   'modifiedNouns.geometry',
   'modifiedNouns.drag',
   'modifiedNouns.fling',
+  'modifiedNouns.zoom',
   'modifiedNouns.fullscreen',
   'modifiedNouns.loader'
 ])

@@ -25,6 +25,7 @@
         class="level"
         drag
         fling
+        zoom
         ng-repeat="(key, level) in levels"
         ng-style="{ 'z-index': 1 - key }"
         ng-class="'level-' + key">
@@ -50,6 +51,7 @@
     <script src="js/geometry.js"></script>
     <script src="js/drag.js"></script>
     <script src="js/fling.js"></script>
+    <script src="js/zoom.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/loader.js"></script>
     <!-- /build -->

@@ -2,50 +2,87 @@
 
 angular.module('modifiedNouns.fling', [])
 
+.factory('FlingAnimation', function ($window, $interval, Limit, positionEl) {
+
+  var FREQUENCY = 10;
+  var DURATION = 1000;
+  var BOUNCE_DAMPER = 0.25;
+  var COUNT = DURATION / FREQUENCY;
+
+  var pos = {};
+
+  var i, difference, easeFactor, cancel;
+
+  var easeOut = function (curTime, duration, power) {
+    return 1 - $window.Math.pow(1 - (curTime / duration), power);
+  };
+
+  var calcBounce = function (value, limit) {
+    difference = value - limit;
+    return limit - difference * BOUNCE_DAMPER;
+  };
+
+  var bouncePos = function (pos, checkResult) {
+    if(checkResult.x === 1) {
+      pos.x = calcBounce(pos.x, checkResult.limits.maxX);
+    } else if(checkResult.x === -1) {
+      pos.x = calcBounce(pos.x, checkResult.limits.minX);
+    }
+
+    if(checkResult.y === 1) {
+      pos.y = calcBounce(pos.y, checkResult.limits.maxY);
+    } else if(checkResult.y === -1) {
+      pos.y = calcBounce(pos.y, checkResult.limits.minY);
+    }
+
+    return pos;
+  };
+
+  var increment = function (data, element) {
+    i++;
+
+    easeFactor = easeOut(i * FREQUENCY, DURATION, 3);
+
+    pos.x = data.startX + (data.finishX - data.startX) * easeFactor;
+    pos.y = data.startY + (data.finishY - data.startY) * easeFactor;
+
+    pos = bouncePos(pos, Limit.check(pos.x, pos.y));
+
+    positionEl(element, pos.x, pos.y);
+  };
+
+  var start = function (data, element) {
+    i = 0;
+
+    increment(data, element);
+    cancel = $interval(increment, FREQUENCY, COUNT, false, data, element);
+
+    return cancel;
+  };
+
+  var stop = function () {
+    if (angular.isDefined(cancel)) {
+      $interval.cancel(cancel);
+      cancel = undefined;
+    }
+  };
+
+  return {
+    start: start,
+    stop: stop
+  };
+
+})
+
 .factory('Fling',
-  function (
-    $window, $document, $interval, $timeout,
-    Geometry, Limit, Input, positionEl) {
-
-    var FREQUENCY = 10;
-    var DURATION = 1000;
-    var BOUNCE_DAMPER = 0.25;
-
-    var COUNT = DURATION / FREQUENCY;
+  function ($window, $document, $timeout, Geometry, Input, FlingAnimation) {
 
     var MAX_IDLE_TIME = 25;
     var MIN_POINTS = 6;
 
-    var pos = {};
     var flingData = {};
 
-    var i, difference, easeFactor, cancel;
     var idleTime, lastPoint, startPoint, elRect, flingVector, flingLength;
-
-    var easeOut = function (curTime, duration, power) {
-      return 1 - $window.Math.pow(1 - (curTime / duration), power);
-    };
-
-    var calcBounce = function (value, limit) {
-      difference = value - limit;
-      return limit - difference * BOUNCE_DAMPER;
-    };
-
-    var bouncePos = function (pos, checkResult) {
-      if(checkResult.x === 1) {
-        pos.x = calcBounce(pos.x, checkResult.limits.maxX);
-      } else if(checkResult.x === -1) {
-        pos.x = calcBounce(pos.x, checkResult.limits.minX);
-      }
-
-      if(checkResult.y === 1) {
-        pos.y = calcBounce(pos.y, checkResult.limits.maxY);
-      } else if(checkResult.y === -1) {
-        pos.y = calcBounce(pos.y, checkResult.limits.minY);
-      }
-
-      return pos;
-    };
 
     var decide = function (idleTime, numPoints) { // Heuristic
       return idleTime <= MAX_IDLE_TIME && numPoints >= MIN_POINTS;
@@ -62,47 +99,30 @@ angular.module('modifiedNouns.fling', [])
       flingData.startY  = elRect.top;
       flingData.finishY = elRect.top + (flingVector.dir[1] * flingLength);
 
-      start(flingData, element);
-    };
-
-    var increment = function (data, element) {
-      i++;
-
-      easeFactor = easeOut(i * FREQUENCY, DURATION, 3);
-
-      pos.x = data.startX + (data.finishX - data.startX) * easeFactor;
-      pos.y = data.startY + (data.finishY - data.startY) * easeFactor;
-
-      pos = bouncePos(pos, Limit.check(pos.x, pos.y));
-
-      positionEl(element, pos.x, pos.y);
-    };
-
-    var start = function (data, element) {
-      i = 0;
-
-      increment(data, element);
-      cancel = $interval(increment, FREQUENCY, COUNT, false, data, element);
-
-      return cancel;
-    };
-
-    var stop = function () {
-      if (angular.isDefined(cancel)) {
-        $interval.cancel(cancel);
-        cancel = undefined;
-      }
+      FlingAnimation.start(flingData, element);
     };
 
     return {
       bind: function (element) {
+        var sessionId, eventData;
 
-        element.on(Input.EVENTS.start, function () {
-          stop();
-          $document.on(Input.EVENTS.end, onEnd);
+        element.on(Input.EVENTS.start, function (e) {
+          FlingAnimation.stop();
+
+          // TODO: better solution than this...
+          // custom event, maybe triggerHandler?
+          if(!sessionId) {
+            eventData = Input.getTouches(e)[0];
+            sessionId = !!eventData && eventData.id;
+            $document.on(Input.EVENTS.end, onEnd);
+          }
         });
 
-        var onEnd = function () {
+        var onEnd = function (e) {
+          eventData = Input.getTouches(e)[0];
+
+          if(eventData.id !== sessionId) { return; }
+
           lastPoint = Geometry.points[ Geometry.points.length - 1 ];
 
           if(!!lastPoint) {
@@ -120,6 +140,7 @@ angular.module('modifiedNouns.fling', [])
             });
           }
 
+          sessionId = null;
           $document.off(Input.EVENTS.end, onEnd);
         };
 

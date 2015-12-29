@@ -67,7 +67,7 @@ angular.module('modifiedNouns.drag', [])
         }
       });
 
-      var _onMove = function (e) {
+      var _onMove = function () {
         eventData = Input.activeTouches[sessionId];
 
         if(!!eventData) {

@@ -57,10 +57,11 @@ angular.module('modifiedNouns.drag', [])
         eventData = Input.getTouches(e)[0];
 
         if(!!eventData) {
-          Input.dragging = true;
           sessionId = eventData.id;
 
           onStart(element, eventData);
+
+          element.triggerHandler('dragstart');
 
           $document.on(Input.EVENTS.move, _onMove);
           $document.on(Input.EVENTS.end, _onEnd);
@@ -78,8 +79,9 @@ angular.module('modifiedNouns.drag', [])
       var _onEnd = function () {
         // TODO: start a drag session with another touch if it's there
         if(!Input.activeTouches[sessionId]) {
-          Input.dragging = false;
           sessionId = null;
+
+          $document.triggerHandler('dragend');
 
           $document.off(Input.EVENTS.move, _onMove);
           $document.off(Input.EVENTS.end, _onEnd);

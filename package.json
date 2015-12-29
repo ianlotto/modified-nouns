@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
     "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-concat": "^0.5.1",
     "grunt-contrib-copy": "^0.8.0",
@@ -18,5 +19,8 @@
     "grunt-jscs": "^1.8.0",
     "grunt-ng-annotate": "^0.10.0",
     "grunt-processhtml": "^0.3.7"
+  },
+  "scripts": {
+    "production": "grunt production"
   }
 }

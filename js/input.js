@@ -26,7 +26,7 @@ angular.module('modifiedNouns.input', [])
 
 })
 
-.factory('Input', function ($window, $document) {
+.factory('Input', function ($window, $document, $timeout) {
 
   var EVENTS = {
     start: 'mousedown touchstart',
@@ -37,7 +37,35 @@ angular.module('modifiedNouns.input', [])
   var activeTouches = { length: 0 };
   var mouseExp = /^mouse/i;
 
-  var touches, _touches, touch, _touch;
+  var delta, absDelta, lowestDelta, cancel, touches, _touches, touch, _touch;
+
+  // Adapted from https://github.com/jquery/jquery-mousewheel
+  // TODO: trackpad needs help...
+  var normalizeWheelDelta = function (e) {
+    delta = e.deltaY * -1;
+
+    if(e.deltaMode === 1) {
+      delta *= 16;
+    } else if(e.deltaMode === 2) {
+      delta *= element[0].getBoundingClientRect().height;
+    }
+
+    absDelta = $window.Math.abs(delta);
+
+    if(!lowestDelta || absDelta < lowestDelta) {
+      lowestDelta = absDelta;
+    }
+
+    delta = $window.Math[ delta >= 1 ? 'floor' : 'ceil' ](delta / lowestDelta);
+
+    if(!!cancel) {
+      $timeout.cancel(cancel);
+    }
+
+    cancel = $timeout(function () { lowestDelta = null; }, 200);
+
+    return delta;
+  };
 
   // Normalize between mouse and touch
   var createTouch = function (input) {
@@ -95,6 +123,7 @@ angular.module('modifiedNouns.input', [])
   return {
     EVENTS: EVENTS,
     activeTouches: activeTouches,
-    getTouches: getTouches
+    getTouches: getTouches,
+    normalizeWheelDelta: normalizeWheelDelta
   };
 });

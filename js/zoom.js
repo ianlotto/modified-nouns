@@ -2,14 +2,18 @@
 
 angular.module('modifiedNouns.zoom', [])
 
-.directive('zoom', function () {
+.directive('zoom', function (Input) {
 
   return {
     restrict: 'A',
     link: function (scope, element) {
 
+      var delta;
+
       element.on('wheel', function (e) {
-        console.log(e);
+        e.preventDefault();
+
+        var delta = Input.normalizeWheelDelta(e);
       });
 
     }

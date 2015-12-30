@@ -40,7 +40,7 @@ angular.module('modifiedNouns.input', [])
   var delta, absDelta, lowestDelta, cancel, touches, _touches, touch, _touch;
 
   // Adapted from https://github.com/jquery/jquery-mousewheel
-  // TODO: trackpad needs help...
+  // TODO: trackpad needs help, prevent NaN from being returned...
   var normalizeWheelDelta = function (e) {
     delta = e.deltaY * -1;
 

@@ -47,9 +47,9 @@ angular.module('modifiedNouns.drag', [])
 
   return {
     bind: function (element) {
-
       element.on(Input.EVENTS.start, function (e) {
-        if(!!sessionId) { return; } // Allow only one drag session at a time
+        // Allow only one drag session at a time
+        if(!!sessionId || e.button > 0) { return; }
 
         eventData = Input.getTouches(e)[0];
 

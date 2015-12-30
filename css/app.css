@@ -75,6 +75,10 @@ button {
   opacity: 1;
 }
 
+[modified-nouns].zooming .level {
+  opacity: .95;
+}
+
 .level-1 {
   width: 4500px;
   height: 6000px;

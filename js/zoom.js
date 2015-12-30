@@ -2,9 +2,10 @@
 
 angular.module('modifiedNouns.zoom', [])
 
-.factory('Zoom', function ($window, ASSET_DATA, Input) {
+.factory('Zoom', function ($window, $timeout, ASSET_DATA, Input) {
 
   var ZOOM_DAMPER = 2000;
+  var zooming = false;
 
   var targets = [];
   var size = {};
@@ -18,7 +19,7 @@ angular.module('modifiedNouns.zoom', [])
   // TODO: better way to set this?
   var fullDims = { height: 6000, width: 4500 };
 
-  var prevTarget, target;
+  var delta, prevTarget, target, cancel;
 
   var sizeElement = function (element, width, height) {
     element.css({
@@ -30,6 +31,22 @@ angular.module('modifiedNouns.zoom', [])
 
   var hideElement = function (element) {
     element.css('display', 'none');
+  };
+
+  var setZoomState = function (element, state) {
+    element[state ? 'addClass' : 'removeClass']('zooming');
+    zooming = state;
+  };
+
+  var constrainScale = function (scale) {
+    // TODO: think about incorporating with Limit
+    if(scale.current > scale.max) {
+      scale.current = scale.max;
+    } else if(scale.current < scale.min) {
+      scale.current = scale.min;
+    }
+
+    return scale;
   };
 
   var registerTarget = function (element, data) {
@@ -53,47 +70,47 @@ angular.module('modifiedNouns.zoom', [])
     return !!(current <= range.max && current >= range.min);
   };
 
+  var zoom = function (delta) {
+    scale.current += delta / ZOOM_DAMPER;
+    scale = constrainScale(scale);
+
+    size.width = fullDims.width * scale.current;
+    size.height = fullDims.height * scale.current;
+
+    prevTarget = target;
+    target = findTarget(scale.current, targets);
+
+    // TODO: position around zoom point as well
+    sizeElement(target.element, size.width, size.height);
+
+    if(!!prevTarget && prevTarget.element !== target.element) {
+      hideElement(prevTarget.element);
+    }
+  };
+
   return {
     scale: scale,
     registerTarget: registerTarget,
 
     bind: function (element) {
-      var targetEl, delta, dir;
-
       element.on('wheel', function (e) {
         e.preventDefault();
 
-        if(element[0] === e.target) { return; }
+        if(element[0] !== e.target) {
 
-        delta = Input.normalizeWheelDelta(e, element);
+          if(!zooming) {
+            setZoomState(element, true);
+          }
 
-        scale.current += delta / ZOOM_DAMPER;
+          if(!!cancel) {
+            $timeout.cancel(cancel);
+          }
 
-        // Global constraints
-        // TODO: think about incorporating with Limit
-        if(scale.current > scale.max) {
-          scale.current = scale.max;
-        } else if(scale.current < scale.min) {
-          scale.current = scale.min;
+          cancel = $timeout(setZoomState, 200, false, element, false);
+
+          zoom(Input.normalizeWheelDelta(e, element));
         }
-
-        size.width = fullDims.width * scale.current;
-        size.height = fullDims.height * scale.current;
-
-        prevTarget = target;
-        target = findTarget(scale.current, targets);
-
-        // TODO: position around zoom point as well
-        // TODO: try opacity change when zooming... needs some kind of effect
-
-        sizeElement(target.element, size.width, size.height);
-
-        if(!!prevTarget && prevTarget.element !== target.element) {
-          hideElement(prevTarget.element);
-        }
-
       });
-
     }
   };
 

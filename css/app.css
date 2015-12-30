@@ -63,6 +63,7 @@ button {
 
 .level {
   display: none;
+  background-color: rgb(255,255,255);
 }
 
 .level.level-1 {
@@ -103,4 +104,5 @@ button {
   width: 50%;
   height: 50%;
   background-size: 100%;
+  background-repeat: no-repeat;
 }

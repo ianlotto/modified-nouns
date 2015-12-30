@@ -4,9 +4,9 @@ angular.module('modifiedNouns.zoom', [])
 
 .factory('Zoom', function ($window, ASSET_DATA, Input) {
 
-  var ZOOM_DAMPER = 10000;
+  var ZOOM_DAMPER = 2000;
 
-  var levels = [];
+  var targets = [];
   var size = {};
 
   var scale = {
@@ -15,12 +15,10 @@ angular.module('modifiedNouns.zoom', [])
     min: $window.Math.pow(2, -ASSET_DATA.img.levels)
   };
 
-  var fullDims;
+  // TODO: better way to set this?
+  var fullDims = { height: 6000, width: 4500 };
 
-  var registerLevel = function (element, data) {
-    levels[ data.order ] = angular.copy(data);
-    levels[ data.order ].element = element;
-  };
+  var prevTarget, target;
 
   var sizeElement = function (element, width, height) {
     element.css({
@@ -30,30 +28,46 @@ angular.module('modifiedNouns.zoom', [])
     });
   };
 
+  var hideElement = function (element) {
+    element.css('display', 'none');
+  };
+
+  var registerTarget = function (element, data) {
+    targets[ data.order ] = angular.copy(data);
+    targets[ data.order ].element = element;
+  };
+
+  var findTarget = function (current, targets) {
+    for (var i = 0; i < targets.length; i++) {
+      target = targets[i];
+
+      if(inRange(current, target.range)) {
+        break;
+      }
+    }
+
+    return target;
+  };
+
   var inRange = function (current, range) {
     return !!(current <= range.max && current >= range.min);
   };
 
   return {
     scale: scale,
+    registerTarget: registerTarget,
 
-    bind: function (element, data) {
+    bind: function (element) {
       var targetEl, delta, dir;
-
-      registerLevel(element, data);
 
       element.on('wheel', function (e) {
         e.preventDefault();
 
-        // TODO: better way to get this
-        if(!fullDims) {
-          fullDims = element[0].getBoundingClientRect();
-          fullDims = { height: fullDims.height, width: fullDims.width };
-        }
+        if(element[0] === e.target) { return; }
 
         delta = Input.normalizeWheelDelta(e, element);
 
-        scale.current += (delta / ZOOM_DAMPER);
+        scale.current += delta / ZOOM_DAMPER;
 
         // Global constraints
         // TODO: think about incorporating with Limit
@@ -66,18 +80,18 @@ angular.module('modifiedNouns.zoom', [])
         size.width = fullDims.width * scale.current;
         size.height = fullDims.height * scale.current;
 
-        if(inRange(scale.current, data.range)) {
-          targetEl = element;
-        } else {
-          dir = scale.current >= data.range.max ? -1 : 1;
-          // Swap out current level and start targeting the next
-          targetEl = levels[ data.order + dir ].element;
-          element.css('display', 'none');
-        }
+        prevTarget = target;
+        target = findTarget(scale.current, targets);
 
         // TODO: position around zoom point as well
         // TODO: try opacity change when zooming... needs some kind of effect
-        sizeElement(targetEl, size.width, size.height);
+
+        sizeElement(target.element, size.width, size.height);
+
+        if(!!prevTarget && prevTarget.element !== target.element) {
+          hideElement(prevTarget.element);
+        }
+
       });
 
     }
@@ -88,15 +102,21 @@ angular.module('modifiedNouns.zoom', [])
 .directive('zoom', function ($window, Zoom) {
   return {
     restrict: 'A',
-    link: function (scope, element) {
-      var key = $window.parseInt(scope.key);
+    link: function (scope, element, attrs) {
+      var action = attrs.zoom;
 
-      var data = {
-        order: $window.Math.log(key) / $window.Math.LN2,
-        range: { max: 1 / key, min: 1 / (key * 2) }
-      };
+      if(action === 'bind') {
+        Zoom.bind(element);
+      } else if(action === 'target') {
+        var key = $window.parseInt(scope.key);
 
-      Zoom.bind(element, data);
+        var data = {
+          order: $window.Math.log(key) / $window.Math.LN2,
+          range: { max: 1 / key, min: 1 / (key * 2) }
+        };
+
+        Zoom.registerTarget(element, data);
+      }
     }
   };
 });

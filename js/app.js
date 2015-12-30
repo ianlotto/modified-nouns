@@ -3,6 +3,7 @@
 angular.module('modifiedNouns', [
   'modifiedNouns.input',
   'modifiedNouns.geometry',
+  'modifiedNouns.limit',
   'modifiedNouns.drag',
   'modifiedNouns.fling',
   'modifiedNouns.zoom',

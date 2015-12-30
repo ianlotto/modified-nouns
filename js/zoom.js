@@ -51,7 +51,7 @@ angular.module('modifiedNouns.zoom', [])
           fullDims = { height: fullDims.height, width: fullDims.width };
         }
 
-        delta = Input.normalizeWheelDelta(e);
+        delta = Input.normalizeWheelDelta(e, element);
 
         scale.current += (delta / ZOOM_DAMPER);
 
@@ -90,7 +90,6 @@ angular.module('modifiedNouns.zoom', [])
     restrict: 'A',
     link: function (scope, element) {
       var key = $window.parseInt(scope.key);
-      var scale = Zoom.scale;
 
       var data = {
         order: $window.Math.log(key) / $window.Math.LN2,

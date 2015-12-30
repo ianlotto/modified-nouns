@@ -41,7 +41,7 @@ angular.module('modifiedNouns.input', [])
 
   // Adapted from https://github.com/jquery/jquery-mousewheel
   // TODO: trackpad needs help, prevent NaN from being returned...
-  var normalizeWheelDelta = function (e) {
+  var normalizeWheelDelta = function (e, element) {
     delta = e.deltaY * -1;
 
     if(e.deltaMode === 1) {

@@ -46,7 +46,7 @@ angular.module('modifiedNouns.fling', [])
     pos.x = data.startX + (data.finishX - data.startX) * easeFactor;
     pos.y = data.startY + (data.finishY - data.startY) * easeFactor;
 
-    pos = bouncePos(pos, Limit.check(pos.x, pos.y));
+    pos = bouncePos(pos, Limit.check(pos));
 
     positionEl(element, pos.x, pos.y);
   };

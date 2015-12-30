@@ -2,24 +2,19 @@
 
 angular.module('modifiedNouns.zoom', [])
 
-.factory('Zoom', function ($window, $timeout, ASSET_DATA, Input) {
+.factory('Zoom', function ($window, $timeout, ASSET_DATA, Limit, Input) {
 
   var ZOOM_DAMPER = 2000;
   var zooming = false;
 
-  var targets = [];
+  var pos = { z: 1 };
   var size = {};
-
-  var scale = {
-    current: 1,
-    max: 1,
-    min: $window.Math.pow(2, -ASSET_DATA.img.levels)
-  };
+  var targets = [];
 
   // TODO: better way to set this?
   var fullDims = { height: 6000, width: 4500 };
 
-  var delta, prevTarget, target, cancel;
+  var prevTarget, target, cancel;
 
   var sizeElement = function (element, width, height) {
     element.css({
@@ -38,15 +33,12 @@ angular.module('modifiedNouns.zoom', [])
     zooming = state;
   };
 
-  var constrainScale = function (scale) {
-    // TODO: think about incorporating with Limit
-    if(scale.current > scale.max) {
-      scale.current = scale.max;
-    } else if(scale.current < scale.min) {
-      scale.current = scale.min;
-    }
+  var constrainScale = function (pos, checkResult) {
+    pos.z = checkResult.z === -1 ?
+      checkResult.limits.minZ : checkResult.z === 1 ?
+      checkResult.limits.maxZ : pos.z;
 
-    return scale;
+    return pos;
   };
 
   var registerTarget = function (element, data) {
@@ -54,11 +46,11 @@ angular.module('modifiedNouns.zoom', [])
     targets[ data.order ].element = element;
   };
 
-  var findTarget = function (current, targets) {
+  var findTarget = function (z, targets) {
     for (var i = 0; i < targets.length; i++) {
       target = targets[i];
 
-      if(inRange(current, target.range)) {
+      if(inRange(z, target.range)) {
         break;
       }
     }
@@ -66,19 +58,19 @@ angular.module('modifiedNouns.zoom', [])
     return target;
   };
 
-  var inRange = function (current, range) {
-    return !!(current <= range.max && current >= range.min);
+  var inRange = function (z, range) {
+    return !!(z <= range.max && z >= range.min);
   };
 
   var zoom = function (delta) {
-    scale.current += delta / ZOOM_DAMPER;
-    scale = constrainScale(scale);
+    pos.z += delta / ZOOM_DAMPER;
+    pos = constrainScale(pos, Limit.check(pos));
 
-    size.width = fullDims.width * scale.current;
-    size.height = fullDims.height * scale.current;
+    size.width = fullDims.width * pos.z;
+    size.height = fullDims.height * pos.z;
 
     prevTarget = target;
-    target = findTarget(scale.current, targets);
+    target = findTarget(pos.z, targets);
 
     // TODO: position around zoom point as well
     sizeElement(target.element, size.width, size.height);
@@ -88,8 +80,9 @@ angular.module('modifiedNouns.zoom', [])
     }
   };
 
+  Limit.setZ(1, $window.Math.pow(2, -ASSET_DATA.img.levels));
+
   return {
-    scale: scale,
     registerTarget: registerTarget,
 
     bind: function (element) {

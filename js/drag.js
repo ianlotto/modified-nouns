@@ -28,7 +28,7 @@ angular.module('modifiedNouns.drag', [])
     pos.x = elementRect.left;
     pos.y = elementRect.top;
 
-    Limit.$set(elementRect, element.parent()[0].getBoundingClientRect());
+    Limit.setXY(elementRect, element.parent()[0].getBoundingClientRect());
 
     point = Geometry.registerPoint(eventPos);
   };
@@ -40,7 +40,7 @@ angular.module('modifiedNouns.drag', [])
     pos.x = pos.x + vector.x;
     pos.y = pos.y + vector.y;
 
-    pos = constrainPos(pos, Limit.check(pos.x, pos.y));
+    pos = constrainPos(pos, Limit.check(pos));
 
     positionEl(element, pos.x, pos.y);
   };

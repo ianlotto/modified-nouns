@@ -7,8 +7,7 @@ angular.module('modifiedNouns.input', [])
   var limitCheck = { limits: limits };
 
   return {
-
-    $set: function (startData, parentData) {
+    setXY: function (startData, parentData) {
       limits.maxX = parentData.left;
       limits.minX = parentData.width - startData.width;
 
@@ -16,9 +15,15 @@ angular.module('modifiedNouns.input', [])
       limits.minY = parentData.height - startData.height;
     },
 
-    check: function (x, y) {
-      limitCheck.x = x < limits.minX ? -1 : x > limits.maxX ? 1 : 0;
-      limitCheck.y = y < limits.minY ? -1 : y > limits.maxY ? 1 : 0;
+    setZ: function (max, min) {
+      limits.maxZ = max;
+      limits.minZ = min;
+    },
+
+    check: function (pos) {
+      limitCheck.x = pos.x < limits.minX ? -1 : pos.x > limits.maxX ? 1 : 0;
+      limitCheck.y = pos.y < limits.minY ? -1 : pos.y > limits.maxY ? 1 : 0;
+      limitCheck.z = pos.z < limits.minZ ? -1 : pos.z > limits.maxZ ? 1 : 0;
 
       return limitCheck;
     }

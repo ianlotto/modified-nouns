@@ -13,7 +13,7 @@ angular.module('modifiedNouns.input', [])
   var activeTouches = { length: 0 };
   var typeExp = /(mouse|wheel)/i;
 
-  var delta, dir, typeMatch, touches, _touches, touch, _touch;
+  var delta, typeMatch, touches, _touches, touch, _touch;
 
   var getWheelTouch = function (e) {
     delta = e.deltaY * -1;

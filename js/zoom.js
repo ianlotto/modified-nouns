@@ -10,9 +10,10 @@ angular.module('modifiedNouns.zoom', [])
 
     var pos = { z: 1 };
     var size = {};
+    var offset = {};
     var targets = [];
 
-    var wheelTouch, prevTarget, target, cancel;
+    var wheelTouch, prevTarget, target, position, elRect, cancel;
 
     var scaleElement = function (element, size, position) {
       element.css({
@@ -33,20 +34,25 @@ angular.module('modifiedNouns.zoom', [])
       zooming = state;
     };
 
-    var position, elRect, offsetX, offsetY, newOffsetX, newOffsetY;
+    var getScaledSize = function (size, z) {
+      size.width = ASSET_DATA.fullSize.width * z;
+      size.height = ASSET_DATA.fullSize.height * z;
+
+      return size;
+    };
 
     var getScaledPosition = function (element, size, position) {
       elRect = element[0].getBoundingClientRect();
 
-      offsetX = (position.x - elRect.left);
-      offsetY = (position.y - elRect.top);
+      offset.x = (position.x - elRect.left);
+      offset.y = (position.y - elRect.top);
 
-      newOffsetX = size.width * (offsetX / elRect.width);
-      newOffsetY = size.height * (offsetY / elRect.height);
+      offset.newX = size.width * (offset.x / elRect.width);
+      offset.newY = size.height * (offset.y / elRect.height);
 
       return {
-        x: elRect.left - (newOffsetX - offsetX),
-        y: elRect.top - (newOffsetY - offsetY)
+        x: elRect.left - (offset.newX - offset.x),
+        y: elRect.top - (offset.newY - offset.y)
       };
     };
 
@@ -86,9 +92,7 @@ angular.module('modifiedNouns.zoom', [])
       prevTarget = target;
       target = findTarget(pos.z, targets);
 
-      size.width = ASSET_DATA.fullSize.width * pos.z;
-      size.height = ASSET_DATA.fullSize.height * pos.z;
-
+      size = getScaledSize(size, pos.z);
       position = getScaledPosition(target.element, size, wheelTouch);
 
       scaleElement(target.element, size, position);

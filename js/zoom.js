@@ -11,9 +11,6 @@ angular.module('modifiedNouns.zoom', [])
   var size = {};
   var targets = [];
 
-  // TODO: better way to set this?
-  var fullDims = { height: 6000, width: 4500 };
-
   var prevTarget, target, cancel;
 
   var sizeElement = function (element, width, height) {
@@ -66,8 +63,8 @@ angular.module('modifiedNouns.zoom', [])
     pos.z += delta / ZOOM_DAMPER;
     pos = constrainScale(pos, Limit.check(pos));
 
-    size.width = fullDims.width * pos.z;
-    size.height = fullDims.height * pos.z;
+    size.width = ASSET_DATA.fullSize.width * pos.z;
+    size.height = ASSET_DATA.fullSize.height * pos.z;
 
     prevTarget = target;
     target = findTarget(pos.z, targets);

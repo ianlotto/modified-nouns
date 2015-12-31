@@ -4,6 +4,10 @@ angular.module('modifiedNouns.loader', [])
 
 .constant('ASSET_DATA', {
   mnSrc: 'data/modified_nouns.json',
+  fullSize: {
+    width: 4500,
+    height: 6000
+  },
   img: {
     template: 'data/{0}/{1}.jpg',
     regExp: /\{(\d)\}/g,

@@ -7,11 +7,11 @@ module.exports = function (grunt) {
       options: {
         jshintrc: true
       },
-      all: ['Gruntfile.js', 'js/*.js']
+      all: ['Gruntfile.js', 'js/*.js', '!js/app.min.js']
     },
 
     jscs: {
-      src: ['Gruntfile.js', 'js/*.js'],
+      src: ['Gruntfile.js', 'js/*.js', '!js/app.min.js'],
       options: {
         config: '.jscsrc',
       }
@@ -61,8 +61,6 @@ module.exports = function (grunt) {
     },
 
     processhtml: {
-      options: {
-      },
       dist: {
         files: {
           'index.html': ['index.html']

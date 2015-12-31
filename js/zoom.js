@@ -4,14 +4,14 @@ angular.module('modifiedNouns.zoom', [])
 
 .factory('Zoom', function ($window, $timeout, ASSET_DATA, Limit, Input) {
 
-  var ZOOM_DAMPER = 2000;
+  var ZOOM_FACTOR = 100;
   var zooming = false;
 
   var pos = { z: 1 };
   var size = {};
   var targets = [];
 
-  var prevTarget, target, cancel;
+  var dir, prevTarget, target, cancel;
 
   var sizeElement = function (element, width, height) {
     element.css({
@@ -59,8 +59,8 @@ angular.module('modifiedNouns.zoom', [])
     return !!(z <= range.max && z >= range.min);
   };
 
-  var zoom = function (delta) {
-    pos.z += delta / ZOOM_DAMPER;
+  var zoom = function (dir) {
+    pos.z += dir / ZOOM_FACTOR;
     pos = constrainScale(pos, Limit.check(pos));
 
     size.width = ASSET_DATA.fullSize.width * pos.z;
@@ -86,7 +86,9 @@ angular.module('modifiedNouns.zoom', [])
       element.on('wheel', function (e) {
         e.preventDefault();
 
-        if(element[0] !== e.target) {
+        dir = Input.getWheelDir(e);
+
+        if(!!dir && element[0] !== e.target) {
 
           if(!zooming) {
             setZoomState(element, true);
@@ -98,7 +100,7 @@ angular.module('modifiedNouns.zoom', [])
 
           cancel = $timeout(setZoomState, 200, false, element, false);
 
-          zoom(Input.normalizeWheelDelta(e, element));
+          zoom(dir);
         }
       });
     }

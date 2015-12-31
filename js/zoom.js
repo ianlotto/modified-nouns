@@ -2,111 +2,133 @@
 
 angular.module('modifiedNouns.zoom', [])
 
-.factory('Zoom', function ($window, $timeout, ASSET_DATA, Limit, Input) {
+.factory('Zoom',
+  function ($window, $timeout, ASSET_DATA, Limit, Input, positionEl) {
 
-  var ZOOM_FACTOR = 100;
-  var zooming = false;
+    var ZOOM_FACTOR = 200;
+    var zooming = false;
 
-  var pos = { z: 1 };
-  var size = {};
-  var targets = [];
+    var pos = { z: 1 };
+    var size = {};
+    var targets = [];
 
-  var dir, prevTarget, target, cancel;
+    var dir, prevTarget, target, cancel;
 
-  var sizeElement = function (element, width, height) {
-    element.css({
-      display: 'block',
-      width:  width + 'px',
-      height: height + 'px'
-    });
-  };
-
-  var hideElement = function (element) {
-    element.css('display', 'none');
-  };
-
-  var setZoomState = function (element, state) {
-    element[state ? 'addClass' : 'removeClass']('zooming');
-    zooming = state;
-  };
-
-  var constrainScale = function (pos, checkResult) {
-    pos.z = checkResult.z === -1 ?
-      checkResult.limits.minZ : checkResult.z === 1 ?
-      checkResult.limits.maxZ : pos.z;
-
-    return pos;
-  };
-
-  var registerTarget = function (element, data) {
-    targets[ data.order ] = angular.copy(data);
-    targets[ data.order ].element = element;
-  };
-
-  var findTarget = function (z, targets) {
-    for (var i = 0; i < targets.length; i++) {
-      target = targets[i];
-
-      if(inRange(z, target.range)) {
-        break;
-      }
-    }
-
-    return target;
-  };
-
-  var inRange = function (z, range) {
-    return !!(z <= range.max && z >= range.min);
-  };
-
-  var zoom = function (dir) {
-    pos.z += dir / ZOOM_FACTOR;
-    pos = constrainScale(pos, Limit.check(pos));
-
-    size.width = ASSET_DATA.fullSize.width * pos.z;
-    size.height = ASSET_DATA.fullSize.height * pos.z;
-
-    prevTarget = target;
-    target = findTarget(pos.z, targets);
-
-    // TODO: position around zoom point as well
-    sizeElement(target.element, size.width, size.height);
-
-    if(!!prevTarget && prevTarget.element !== target.element) {
-      hideElement(prevTarget.element);
-    }
-  };
-
-  Limit.setZ(1, $window.Math.pow(2, -ASSET_DATA.img.levels));
-
-  return {
-    registerTarget: registerTarget,
-
-    bind: function (element) {
-      element.on('wheel', function (e) {
-        e.preventDefault();
-
-        dir = Input.getWheelDir(e);
-
-        if(!!dir && element[0] !== e.target) {
-
-          if(!zooming) {
-            setZoomState(element, true);
-          }
-
-          if(!!cancel) {
-            $timeout.cancel(cancel);
-          }
-
-          cancel = $timeout(setZoomState, 200, false, element, false);
-
-          zoom(dir);
-        }
+    var scaleElement = function (element, size, position) {
+      element.css({
+        display: 'block',
+        width:  size.width + 'px',
+        height: size.height + 'px'
       });
-    }
-  };
 
-})
+      positionEl(element, position.x, position.y);
+    };
+
+    var hideElement = function (element) {
+      element.css('display', 'none');
+    };
+
+    var setZoomState = function (element, state) {
+      element[state ? 'addClass' : 'removeClass']('zooming');
+      zooming = state;
+    };
+
+    var position, elRect, offsetX, offsetY, newOffsetX, newOffsetY;
+
+    var getScaledPosition = function (element, size, x, y) {
+      elRect = element[0].getBoundingClientRect();
+
+      offsetX = (x - elRect.left);
+      offsetY = (y - elRect.top);
+
+      newOffsetX = size.width * (offsetX / elRect.width);
+      newOffsetY = size.height * (offsetY / elRect.height);
+
+      return {
+        x: elRect.left - (newOffsetX - offsetX),
+        y: elRect.top - (newOffsetY - offsetY)
+      };
+    };
+
+    var constrainScale = function (pos, checkResult) {
+      pos.z = checkResult.z === -1 ?
+        checkResult.limits.minZ : checkResult.z === 1 ?
+        checkResult.limits.maxZ : pos.z;
+
+      return pos;
+    };
+
+    var registerTarget = function (element, data) {
+      targets[ data.order ] = angular.copy(data);
+      targets[ data.order ].element = element;
+    };
+
+    var findTarget = function (z, targets) {
+      for (var i = 0; i < targets.length; i++) {
+        target = targets[i];
+
+        if(inRange(z, target.range)) {
+          break;
+        }
+      }
+
+      return target;
+    };
+
+    var inRange = function (z, range) {
+      return !!(z <= range.max && z >= range.min);
+    };
+
+    var zoom = function (dir, e) {
+      pos.z += dir / ZOOM_FACTOR;
+      pos = constrainScale(pos, Limit.check(pos));
+
+      prevTarget = target;
+      target = findTarget(pos.z, targets);
+
+      size.width = ASSET_DATA.fullSize.width * pos.z;
+      size.height = ASSET_DATA.fullSize.height * pos.z;
+
+      position = getScaledPosition(target.element, size, e.pageX, e.pageY);
+
+      scaleElement(target.element, size, position);
+
+      if(!!prevTarget && prevTarget.element !== target.element) {
+        hideElement(prevTarget.element);
+      }
+    };
+
+    Limit.setZ(1, $window.Math.pow(2, -ASSET_DATA.img.levels));
+
+    return {
+      registerTarget: registerTarget,
+
+      bind: function (element) {
+        element.on('wheel', function (e) {
+          e.preventDefault();
+
+          dir = Input.getWheelDir(e);
+
+          if(!!dir && element[0] !== e.target) {
+
+            if(!zooming) {
+              setZoomState(element, true);
+            }
+
+            if(!!cancel) {
+              $timeout.cancel(cancel);
+            }
+
+            cancel = $timeout(setZoomState, 200, false, element, false);
+
+            zoom(dir, e);
+          }
+        });
+      }
+    };
+
+  }
+)
 
 .directive('zoom', function ($window, Zoom) {
   return {

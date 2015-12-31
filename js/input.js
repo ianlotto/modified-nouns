@@ -11,15 +11,17 @@ angular.module('modifiedNouns.input', [])
   };
 
   var activeTouches = { length: 0 };
-  var mouseExp = /^mouse/i;
+  var typeExp = /(mouse|wheel)/i;
 
-  var delta, dir, touches, _touches, touch, _touch;
+  var delta, dir, typeMatch, touches, _touches, touch, _touch;
 
-  var getWheelDir = function (e) {
+  var getWheelTouch = function (e) {
     delta = e.deltaY * -1;
-    dir = delta / $window.Math.abs(delta);
 
-    return dir || 0;
+    _touch = createTouch(e);
+    _touch.dir = delta / $window.Math.abs(delta) || 0;
+
+    return _touch;
   };
 
   // Normalize between mouse and touch
@@ -27,8 +29,13 @@ angular.module('modifiedNouns.input', [])
     _touch = {
       x:  input.pageX,
       y: input.pageY,
-      id: input.identifier || (mouseExp.test(input.type) ? 'mouse' : null)
+      id: input.identifier
     };
+
+    if(!_touch.id) {
+      typeMatch = input.type.match(typeExp);
+      _touch.id = (!!typeMatch && typeMatch[1]) || null;
+    }
 
     return _touch;
   };
@@ -79,6 +86,6 @@ angular.module('modifiedNouns.input', [])
     EVENTS: EVENTS,
     activeTouches: activeTouches,
     getTouches: getTouches,
-    getWheelDir: getWheelDir
+    getWheelTouch: getWheelTouch
   };
 });

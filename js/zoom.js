@@ -12,7 +12,7 @@ angular.module('modifiedNouns.zoom', [])
     var size = {};
     var targets = [];
 
-    var dir, prevTarget, target, cancel;
+    var wheelTouch, prevTarget, target, cancel;
 
     var scaleElement = function (element, size, position) {
       element.css({
@@ -35,11 +35,11 @@ angular.module('modifiedNouns.zoom', [])
 
     var position, elRect, offsetX, offsetY, newOffsetX, newOffsetY;
 
-    var getScaledPosition = function (element, size, x, y) {
+    var getScaledPosition = function (element, size, position) {
       elRect = element[0].getBoundingClientRect();
 
-      offsetX = (x - elRect.left);
-      offsetY = (y - elRect.top);
+      offsetX = (position.x - elRect.left);
+      offsetY = (position.y - elRect.top);
 
       newOffsetX = size.width * (offsetX / elRect.width);
       newOffsetY = size.height * (offsetY / elRect.height);
@@ -79,8 +79,8 @@ angular.module('modifiedNouns.zoom', [])
       return !!(z <= range.max && z >= range.min);
     };
 
-    var zoom = function (dir, e) {
-      pos.z += dir / ZOOM_FACTOR;
+    var zoom = function (wheelTouch) {
+      pos.z += wheelTouch.dir / ZOOM_FACTOR;
       pos = constrainScale(pos, Limit.check(pos));
 
       prevTarget = target;
@@ -89,7 +89,7 @@ angular.module('modifiedNouns.zoom', [])
       size.width = ASSET_DATA.fullSize.width * pos.z;
       size.height = ASSET_DATA.fullSize.height * pos.z;
 
-      position = getScaledPosition(target.element, size, e.pageX, e.pageY);
+      position = getScaledPosition(target.element, size, wheelTouch);
 
       scaleElement(target.element, size, position);
 
@@ -107,9 +107,9 @@ angular.module('modifiedNouns.zoom', [])
         element.on('wheel', function (e) {
           e.preventDefault();
 
-          dir = Input.getWheelDir(e);
+          wheelTouch = Input.getWheelTouch(e);
 
-          if(!!dir && element[0] !== e.target) {
+          if(!!wheelTouch.dir && element[0] !== e.target) {
 
             if(!zooming) {
               setZoomState(element, true);
@@ -121,7 +121,7 @@ angular.module('modifiedNouns.zoom', [])
 
             cancel = $timeout(setZoomState, 200, false, element, false);
 
-            zoom(dir, e);
+            zoom(wheelTouch);
           }
         });
       }

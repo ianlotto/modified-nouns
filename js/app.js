@@ -41,8 +41,6 @@ angular.module('modifiedNouns', [
 
       ModifiedNouns.levels[data.order] = data;
       ModifiedNouns.levels[data.order].element = element;
-
-      element.attr('level', key);
     }
   };
 })

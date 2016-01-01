@@ -100,7 +100,7 @@ button {
   height: 375px;
 }
 
-.tile {
+[tile] {
   width: 50%;
   height: 50%;
   background-size: 100%;

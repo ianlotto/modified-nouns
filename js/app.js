@@ -20,6 +20,33 @@ angular.module('modifiedNouns', [
   };
 })
 
+.factory('ModifiedNouns', function () {
+  var levels = [];
+
+  return {
+    levels: levels
+  };
+})
+
+.directive('level', function ($window, ModifiedNouns) {
+  return {
+    restrict: 'A',
+    link: function (scope, element) {
+      var key = $window.parseInt(scope.key);
+
+      var data = {
+        order: $window.Math.log(key) / $window.Math.LN2,
+        range: { max: 1 / key, min: 1 / (key * 2) }
+      };
+
+      ModifiedNouns.levels[data.order] = data;
+      ModifiedNouns.levels[data.order].element = element;
+
+      element.attr('level', key);
+    }
+  };
+})
+
 .directive('modifiedNouns', function ($window, ASSET_DATA, Loader) {
   return {
     restrict: 'A',

@@ -61,41 +61,41 @@ button {
   position: absolute;
 }
 
-.level {
+[level] {
   display: none;
   background-color: rgb(255,255,255);
 }
 
-.level.level-1 {
+[level="1"] {
   display: block;
   opacity: 0;
 }
 
-[modified-nouns].top-level > .level-1 {
+[modified-nouns].top-level > [level="1"] {
   opacity: 1;
 }
 
-.level-1 {
+[level="1"]{
   width: 4500px;
   height: 6000px;
 }
 
-.level-2 {
+[level="2"] {
   width: 2250px;
   height: 3000px;
 }
 
-.level-4 {
+[level="4"] {
   width: 1125px;
   height: 1500px;
 }
 
-.level-8 {
+[level="8"] {
   width: 564px;
   height: 750px;
 }
 
-.level-16 {
+[level="16"] {
   width: 282px;
   height: 375px;
 }

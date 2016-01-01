@@ -22,13 +22,12 @@
     <div modified-nouns zoom="bind" ng-class="{ 'top-level': hasTopLevel }">
 
       <div
-        class="level"
+        level
         drag
         fling
         zoom="target"
         ng-repeat="(key, level) in levels"
-        ng-style="{ 'z-index': key }"
-        ng-class="'level-' + key">
+        ng-style="{ 'z-index': key }">
 
         <div
           class="tile"

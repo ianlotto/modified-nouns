@@ -3,17 +3,17 @@
 angular.module('modifiedNouns.zoom', [])
 
 .factory('Zoom',
-  function ($window, $timeout, ASSET_DATA, Limit, Input, positionEl) {
+  function ($window, $timeout, ASSET_DATA, Limit, Input, ModifiedNouns, positionEl) {
 
     var ZOOM_FACTOR = 200;
     var zooming = false;
 
+    var levels = ModifiedNouns.levels;
     var pos = { z: 1 };
     var size = {};
     var offset = {};
-    var targets = [];
 
-    var wheelTouch, prevTarget, target, position, elRect, cancel;
+    var wheelTouch, prevLevel, level, position, elRect, cancel;
 
     var scaleElement = function (element, size, position) {
       element.css({
@@ -64,21 +64,16 @@ angular.module('modifiedNouns.zoom', [])
       return pos;
     };
 
-    var registerTarget = function (element, data) {
-      targets[ data.order ] = angular.copy(data);
-      targets[ data.order ].element = element;
-    };
+    var findLevel = function (z, levels) {
+      for (var i = 0; i < levels.length; i++) {
+        level = levels[i];
 
-    var findTarget = function (z, targets) {
-      for (var i = 0; i < targets.length; i++) {
-        target = targets[i];
-
-        if(inRange(z, target.range)) {
+        if(inRange(z, level.range)) {
           break;
         }
       }
 
-      return target;
+      return level;
     };
 
     var inRange = function (z, range) {
@@ -89,24 +84,22 @@ angular.module('modifiedNouns.zoom', [])
       pos.z += wheelTouch.dir / ZOOM_FACTOR;
       pos = constrainScale(pos, Limit.check(pos));
 
-      prevTarget = target;
-      target = findTarget(pos.z, targets);
+      prevLevel = level;
+      level = findLevel(pos.z, levels);
 
       size = getScaledSize(size, pos.z);
-      position = getScaledPosition(target.element, size, wheelTouch);
+      position = getScaledPosition(level.element, size, wheelTouch);
 
-      scaleElement(target.element, size, position);
+      scaleElement(level.element, size, position);
 
-      if(!!prevTarget && prevTarget.element !== target.element) {
-        hideElement(prevTarget.element);
+      if(!!prevLevel && prevLevel.element !== level.element) {
+        hideElement(prevLevel.element);
       }
     };
 
     Limit.setZ(1, $window.Math.pow(2, -ASSET_DATA.img.levels));
 
     return {
-      registerTarget: registerTarget,
-
       bind: function (element) {
         element.on('wheel', function (e) {
           e.preventDefault();
@@ -134,24 +127,11 @@ angular.module('modifiedNouns.zoom', [])
   }
 )
 
-.directive('zoom', function ($window, Zoom) {
+.directive('zoom', function (Zoom) {
   return {
     restrict: 'A',
-    link: function (scope, element, attrs) {
-      var action = attrs.zoom;
-
-      if(action === 'bind') {
-        Zoom.bind(element);
-      } else if(action === 'target') {
-        var key = $window.parseInt(scope.key);
-
-        var data = {
-          order: $window.Math.log(key) / $window.Math.LN2,
-          range: { max: 1 / key, min: 1 / (key * 2) }
-        };
-
-        Zoom.registerTarget(element, data);
-      }
+    link: function (scope, element) {
+      Zoom.bind(element);
     }
   };
 });

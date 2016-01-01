@@ -19,13 +19,12 @@
 
     <div load-progress ng-class="{ complete: progressData.complete }"></div>
 
-    <div modified-nouns zoom="bind" ng-class="{ 'top-level': hasTopLevel }">
+    <div modified-nouns zoom ng-class="{ 'top-level': hasTopLevel }">
 
       <div
         level="{{ key }}"
         drag
         fling
-        zoom="target"
         ng-repeat="(key, level) in levels"
         ng-style="{ 'z-index': key }">
 

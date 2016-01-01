@@ -11,16 +11,42 @@ angular.module('modifiedNouns', [
   'modifiedNouns.loader'
 ])
 
-.factory('ModifiedNouns', function () {
-  var levels = [];
+.constant('ASSET_DATA', {
+  mnSrc: 'data/modified_nouns.json',
+  img: {
+    template: 'data/{0}/{1}.jpg',
+    regExp: /\{(\d)\}/g,
+    levels: 5,
+    tiles: 4
+  }
+})
+
+.factory('ModifiedNouns', function ($window, ASSET_DATA) {
+  var levels = new $window.Array(ASSET_DATA.img.levels);
 
   return {
+
+    FULL_SIZE: {
+      width: 4500,
+      height: 6000
+    },
+
     levels: levels,
 
     positionLevel: function (level, left, top) {
       level.css({
         left: left + 'px',
         top: top + 'px'
+      });
+    },
+
+    scaleLevel: function (level, size, position) {
+      this.positionLevel(level, position.x, position.y);
+
+      level.css({
+        display: 'block',
+        width:  size.width + 'px',
+        height: size.height + 'px'
       });
     }
 

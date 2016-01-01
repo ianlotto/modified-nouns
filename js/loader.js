@@ -2,20 +2,6 @@
 
 angular.module('modifiedNouns.loader', [])
 
-.constant('ASSET_DATA', {
-  mnSrc: 'data/modified_nouns.json',
-  fullSize: {
-    width: 4500,
-    height: 6000
-  },
-  img: {
-    template: 'data/{0}/{1}.jpg',
-    regExp: /\{(\d)\}/g,
-    levels: 5,
-    tiles: 4
-  }
-})
-
 .factory('Loader', function ($window, $timeout, $q, $http, ASSET_DATA) {
 
   var hasLocalStorage = (function () {

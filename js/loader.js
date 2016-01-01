@@ -164,6 +164,18 @@ angular.module('modifiedNouns.loader', [])
       }
 
       return deferred.promise;
+    },
+
+    hasLevel: function (number) {
+      for (var i = 0; i < ASSET_DATA.img.tiles; i++) {
+        var key = this.getImageKey([number, i]);
+
+        if(!this.images.hasOwnProperty(key)) {
+          return false;
+        }
+      }
+
+      return true;
     }
 
   };

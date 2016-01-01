@@ -70,25 +70,13 @@ angular.module('modifiedNouns', [
   };
 })
 
-.directive('modifiedNouns', function ($window, ASSET_DATA, Loader) {
+.directive('modifiedNouns', function ($window, Loader) {
   return {
     restrict: 'A',
     scope: true,
     link: function (scope) {
       scope.images = Loader.images;
       scope.levels = {};
-
-      var hasTopLevel = function (images) {
-        for (var i = 0; i < ASSET_DATA.img.tiles; i++) {
-          var key = Loader.getImageKey([1, i]);
-
-          if(!images.hasOwnProperty(key)) {
-            return false;
-          }
-        }
-
-        return true;
-      };
 
       var appendTiles = function (image, key) {
         if(key !== 'length') {
@@ -125,7 +113,7 @@ angular.module('modifiedNouns', [
         // Add tiles to DOM as they come in
         angular.forEach(images, appendTiles);
 
-        if(hasTopLevel(images)) {
+        if(Loader.hasLevel(1)) {
           // Wait until the next execution context
           scope.$applyAsync(function () {
             scope.hasTopLevel = true;

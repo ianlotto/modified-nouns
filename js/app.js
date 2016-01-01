@@ -11,20 +11,19 @@ angular.module('modifiedNouns', [
   'modifiedNouns.loader'
 ])
 
-.factory('positionEl', function () {
-  return function (element, left, top) {
-    element.css({
-      left: left + 'px',
-      top: top + 'px'
-    });
-  };
-})
-
 .factory('ModifiedNouns', function () {
   var levels = [];
 
   return {
-    levels: levels
+    levels: levels,
+
+    positionLevel: function (level, left, top) {
+      level.css({
+        left: left + 'px',
+        top: top + 'px'
+      });
+    }
+
   };
 })
 

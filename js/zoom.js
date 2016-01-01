@@ -3,7 +3,7 @@
 angular.module('modifiedNouns.zoom', [])
 
 .factory('Zoom',
-  function ($window, $timeout, ASSET_DATA, Limit, Input, ModifiedNouns, positionEl) {
+  function ($window, $timeout, ASSET_DATA, Limit, Input, ModifiedNouns) {
 
     var ZOOM_FACTOR = 200;
     var zooming = false;
@@ -22,7 +22,7 @@ angular.module('modifiedNouns.zoom', [])
         height: size.height + 'px'
       });
 
-      positionEl(element, position.x, position.y);
+      ModifiedNouns.positionLevel(element, position.x, position.y);
     };
 
     var hideElement = function (element) {

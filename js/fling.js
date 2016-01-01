@@ -2,7 +2,7 @@
 
 angular.module('modifiedNouns.fling', [])
 
-.factory('FlingAnimation', function ($window, $interval, Limit, positionEl) {
+.factory('FlingAnimation', function ($window, $interval, Limit, ModifiedNouns) {
 
   var FREQUENCY = 10;
   var DURATION = 1000;
@@ -48,7 +48,7 @@ angular.module('modifiedNouns.fling', [])
 
     pos = bouncePos(pos, Limit.check(pos));
 
-    positionEl(element, pos.x, pos.y);
+    ModifiedNouns.positionLevel(element, pos.x, pos.y);
   };
 
   var start = function (data, element) {

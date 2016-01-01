@@ -30,36 +30,50 @@ angular.module('modifiedNouns', [
 
   var levels = new $window.Array(ASSET_DATA.img.levels);
 
+  var level, levelData, leftDiff, topDiff;
+
+  var positionLevels = function (leftDiff, topDiff) {
+    for (var i = 0; i < levels.length; i++) {
+      level = levels[i];
+
+      level.element.css({
+        left: (level.position.left += leftDiff) + 'px',
+        top:  (level.position.top += topDiff) + 'px'
+      });
+    }
+  };
+
   return {
     FULL_SIZE: FULL_SIZE,
     levels: levels,
 
+    init: function () {
+      this.positionLevel(levels[0].element, 0, 0);
+    },
+
     positionLevel: function (level, left, top) {
-      level.css({
-        left: left + 'px',
-        top: top + 'px'
-      });
+      levelData = level.data('level');
+
+      leftDiff = left - levelData.position.left;
+      topDiff = top - levelData.position.top;
+
+      if(!leftDiff || !topDiff) {
+        leftDiff = 0;
+        topDiff = 0;
+      }
+
+      positionLevels(leftDiff, topDiff);
+
+      return levelData;
     },
 
     scaleLevel: function (level, size, position) {
-      this.positionLevel(level, position.x, position.y);
+      levelData = this.positionLevel(level, position.x, position.y);
 
       level.css({
         display: 'block',
-        width:  size.width + 'px',
-        height: size.height + 'px'
-      });
-    },
-
-    centerLevels: function () {
-      var mn = this;
-      var left, top;
-
-      angular.forEach(levels, function (level) {
-        left = (mn.FULL_SIZE.width - level.dimensions.width) / 2;
-        top = (mn.FULL_SIZE.height - level.dimensions.height) / 2;
-
-        mn.positionLevel(level.element, left, top);
+        width:  (levelData.size.width = size.width) + 'px',
+        height: (levelData.size.height = size.height) + 'px'
       });
     }
 
@@ -73,21 +87,33 @@ angular.module('modifiedNouns', [
       var scaleFactor = $window.parseInt(attrs.level);
       var order = $window.Math.log(scaleFactor) / $window.Math.LN2;
 
+      var size = {
+        width: ModifiedNouns.FULL_SIZE.width / scaleFactor,
+        height: ModifiedNouns.FULL_SIZE.height / scaleFactor
+      };
+
+      var position = {
+        left: (ModifiedNouns.FULL_SIZE.width - size.width) / 2,
+        top: (ModifiedNouns.FULL_SIZE.height - size.height) / 2
+      };
+
+      var range = {
+        max: 1 / scaleFactor,
+        min: 1 / (scaleFactor * 2)
+      };
+
       var data = {
         scaleFactor: scaleFactor,
         order: order,
-        dimensions: {
-          width: ModifiedNouns.FULL_SIZE.width / scaleFactor,
-          height: ModifiedNouns.FULL_SIZE.height / scaleFactor
-        },
-        range: {
-          max: 1 / scaleFactor,
-          min: 1 / (scaleFactor * 2)
-        }
+        size: size,
+        position: position,
+        range: range
       };
 
       ModifiedNouns.levels[order] = data;
       ModifiedNouns.levels[order].element = element;
+
+      element.data('level', data);
     }
   };
 })
@@ -145,7 +171,7 @@ angular.module('modifiedNouns', [
 
       scope.$watch('total.complete', function (complete) {
         if(complete) {
-          scope.$applyAsync(ModifiedNouns.centerLevels.bind(ModifiedNouns));
+          scope.$applyAsync(ModifiedNouns.init.bind(ModifiedNouns));
         }
       });
 

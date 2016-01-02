@@ -4,26 +4,30 @@ angular.module('modifiedNouns.zoom', [])
 
 .factory('Zoom', function ($window, $timeout, Limit, Input, ModifiedNouns) {
 
-  var ZOOM_FACTOR = 100;
   var zooming = false;
-
-  var levels = ModifiedNouns.levels;
-  var size = {};
-  var offset = {};
-
-  var wheelTouch, prevLevel, level, levelSwitch, position, cancel;
 
   var maxZ = 1;
   var minZ = $window.Math.pow(2, -ModifiedNouns.levels.length);
+  var scalePower = 0;
 
   while($window.Math.round(minZ) !== minZ) {
     maxZ *= 10;
     minZ *= 10;
+    scalePower += 1;
   }
 
-  var pos = { z: maxZ };
-
   Limit.setZ(maxZ, minZ);
+
+  var baseIncrement = $window.Math.pow(10, scalePower - 2);
+
+  var levels = ModifiedNouns.levels;
+  var scaledRanges = new $window.Array(ModifiedNouns.levels.length);
+
+  var pos = { z: maxZ };
+  var size = {};
+  var offset = {};
+
+  var wheelTouch, prevLevel, level, levelSwitch, position, cancel;
 
   var hideElement = function (element) {
     element.css('display', 'none');
@@ -35,8 +39,8 @@ angular.module('modifiedNouns.zoom', [])
   };
 
   var getScaledSize = function (size, z) {
-    size.width = ModifiedNouns.FULL_SIZE.width * z;
-    size.height = ModifiedNouns.FULL_SIZE.height * z;
+    size.width = ModifiedNouns.FULL_SIZE.width * z / maxZ;
+    size.height = ModifiedNouns.FULL_SIZE.height * z / maxZ;
 
     return size;
   };
@@ -59,17 +63,20 @@ angular.module('modifiedNouns.zoom', [])
       checkResult.limits.minZ : checkResult.z === 1 ?
       checkResult.limits.maxZ : pos.z;
 
-    pos.z = $window.Math.round(pos.z * 1000) / 1000;
-
     return pos;
   };
 
   var findLevel = function (z, level) {
-    if(!level || !inRange(z, level.range)) { // Check the current level first
+    // Check the current level first
+    if(!level || !inRange(z, scaledRanges[level.order])) {
       for (var i = 0; i < levels.length; i++) {
-        level = levels[i];
+        // Lazy-build scaled range
+        if(!scaledRanges[i]) {
+          buildScaledRange(i);
+        }
 
-        if(inRange(z, level.range)) {
+        if(inRange(z, scaledRanges[i])) {
+          level = levels[i];
           break;
         }
       }
@@ -82,8 +89,17 @@ angular.module('modifiedNouns.zoom', [])
     return !!(z <= range.max && z >= range.min);
   };
 
+  var buildScaledRange = function (i) {
+    // get increments of each range
+    scaledRanges[i] = {};
+    scaledRanges[i].max = levels[i].range.max * maxZ;
+    scaledRanges[i].min = levels[i].range.min * maxZ;
+
+    return scaledRanges[i];
+  };
+
   var zoom = function (wheelTouch) {
-    pos.z += wheelTouch.dir / ZOOM_FACTOR;
+    pos.z += wheelTouch.dir * baseIncrement;
     pos = constrainScale(pos, Limit.check(pos));
 
     prevLevel = level;

@@ -60,7 +60,6 @@ angular.module('modifiedNouns', [
       centerX = left + levelData.size.width / 2;
       centerY = top + levelData.size.height / 2;
 
-      // TODO: only synch levels when drag / fling / zoom ends
       positionLevels(centerX, centerY);
 
       return levelData;

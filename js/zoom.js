@@ -4,7 +4,7 @@ angular.module('modifiedNouns.zoom', [])
 
 .factory('Zoom', function ($window, $timeout, Limit, Input, ModifiedNouns) {
 
-  var ZOOM_FACTOR = 200;
+  var ZOOM_FACTOR = 100;
   var zooming = false;
 
   var levels = ModifiedNouns.levels;
@@ -12,7 +12,7 @@ angular.module('modifiedNouns.zoom', [])
   var size = {};
   var offset = {};
 
-  var wheelTouch, prevLevel, level, position, elRect, cancel;
+  var wheelTouch, prevLevel, level, levelSwitch, position, cancel;
 
   var hideElement = function (element) {
     element.css('display', 'none');
@@ -30,18 +30,16 @@ angular.module('modifiedNouns.zoom', [])
     return size;
   };
 
-  var getScaledPosition = function (element, size, position) {
-    elRect = element[0].getBoundingClientRect();
+  var getScaledPosition = function (level, size, center) {
+    offset.x = (center.x - level.position.left);
+    offset.y = (center.y - level.position.top);
 
-    offset.x = (position.x - elRect.left);
-    offset.y = (position.y - elRect.top);
-
-    offset.newX = size.width * (offset.x / elRect.width);
-    offset.newY = size.height * (offset.y / elRect.height);
+    offset.newX = size.width * (offset.x / level.size.width);
+    offset.newY = size.height * (offset.y / level.size.height);
 
     return {
-      x: elRect.left - (offset.newX - offset.x),
-      y: elRect.top - (offset.newY - offset.y)
+      x: level.position.left - (offset.newX - offset.x),
+      y: level.position.top - (offset.newY - offset.y)
     };
   };
 
@@ -50,15 +48,19 @@ angular.module('modifiedNouns.zoom', [])
       checkResult.limits.minZ : checkResult.z === 1 ?
       checkResult.limits.maxZ : pos.z;
 
+    pos.z = $window.Math.round(pos.z * 1000) / 1000;
+
     return pos;
   };
 
-  var findLevel = function (z, levels) {
-    for (var i = 0; i < levels.length; i++) {
-      level = levels[i];
+  var findLevel = function (z, level) {
+    if(!level || !inRange(z, level.range)) { // Check the current level first
+      for (var i = 0; i < levels.length; i++) {
+        level = levels[i];
 
-      if(inRange(z, level.range)) {
-        break;
+        if(inRange(z, level.range)) {
+          break;
+        }
       }
     }
 
@@ -74,14 +76,20 @@ angular.module('modifiedNouns.zoom', [])
     pos = constrainScale(pos, Limit.check(pos));
 
     prevLevel = level;
-    level = findLevel(pos.z, levels);
+    level = findLevel(pos.z, level);
+
+    levelSwitch = !!prevLevel && prevLevel !== level;
 
     size = getScaledSize(size, pos.z);
-    position = getScaledPosition(level.element, size, wheelTouch);
+
+    // When switching levels, use prevLevel for calc to ensure smooth transition
+    position = getScaledPosition(
+      levelSwitch ? prevLevel : level, size, wheelTouch
+    );
 
     ModifiedNouns.scaleLevel(level.element, size, position);
 
-    if(!!prevLevel && prevLevel.element !== level.element) {
+    if(levelSwitch) {
       hideElement(prevLevel.element);
     }
   };

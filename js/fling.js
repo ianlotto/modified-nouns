@@ -80,9 +80,9 @@ angular.module('modifiedNouns.fling', [])
     var MAX_IDLE_TIME = 25;
     var MIN_POINTS = 6;
 
-    var flingData = {};
+    var fling = {};
 
-    var idleTime, lastPoint, startPoint, elRect, flingVector, flingLength;
+    var idleTime, lastPoint, startPoint, flingVector, flingLength;
 
     var decide = function (idleTime, numPoints) { // Heuristic
       return idleTime <= MAX_IDLE_TIME && numPoints >= MIN_POINTS;
@@ -92,14 +92,12 @@ angular.module('modifiedNouns.fling', [])
       flingVector = Geometry.registerVector(startPoint, lasPoint);
       flingLength = flingVector.length * (flingVector.duration / 50);
 
-      elRect = level.element[0].getBoundingClientRect();
+      fling.startX  = level.position.left;
+      fling.finishX = level.position.left + (flingVector.dir[0] * flingLength);
+      fling.startY  = level.position.top;
+      fling.finishY = level.position.top + (flingVector.dir[1] * flingLength);
 
-      flingData.startX  = elRect.left;
-      flingData.finishX = elRect.left + (flingVector.dir[0] * flingLength);
-      flingData.startY  = elRect.top;
-      flingData.finishY = elRect.top + (flingVector.dir[1] * flingLength);
-
-      FlingAnimation.start(flingData, level);
+      FlingAnimation.start(fling, level);
     };
 
     return {

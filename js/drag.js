@@ -6,7 +6,7 @@ angular.module('modifiedNouns.drag', [])
 
   var pos = {};
 
-  var elementRect, vector, point, eventData, sessionId;
+  var vector, point, eventData, sessionId;
 
   var constrainPos = function (pos, checkResult) {
     pos.x = checkResult.x === -1 ?
@@ -23,12 +23,10 @@ angular.module('modifiedNouns.drag', [])
   var onStart = function (level, eventPos) {
     Geometry.clearData();
 
-    elementRect = level.element[0].getBoundingClientRect();
+    pos.x = level.position.left;
+    pos.y = level.position.top;
 
-    pos.x = elementRect.left;
-    pos.y = elementRect.top;
-
-    Limit.setXY(elementRect, level.element.parent()[0].getBoundingClientRect());
+    Limit.setXY(level.size, level.element.parent()[0].getBoundingClientRect());
 
     point = Geometry.registerPoint(eventPos);
   };

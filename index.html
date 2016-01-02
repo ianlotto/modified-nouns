@@ -17,7 +17,9 @@
   </head>
   <body>
 
-    <div load-progress ng-class="{ complete: progressData.complete }"></div>
+    <div load-progress ng-class="{ complete: progressData.complete }">
+      <div ng-style="{ width: percentComplete }"></div>
+    </div>
 
     <div modified-nouns zoom ng-class="{ 'top-level': hasTopLevel }">
 

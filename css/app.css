@@ -32,19 +32,24 @@ button {
 
 [load-progress] {
   position: absolute;
-  width: 0%;
+  width: 90%;
   height: 7px;
-  top: 0;
-  left: 0;
+  top: 50%;
+  left: 5%;
   z-index: 1;
   opacity: 1;
-
-  background: linear-gradient(90deg, transparent, rgb(50,50,50) 90%, transparent);
-
+  overflow: hidden;
 }
 
 [load-progress].complete {
   opacity: 0;
+}
+
+[load-progress] > div {
+  width: 0%;
+  height: inherit;
+
+  background: linear-gradient(90deg, transparent, rgb(255,255,255) 90%, transparent);
 }
 
 [toggle-fullscreen] {

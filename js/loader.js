@@ -186,14 +186,14 @@ angular.module('modifiedNouns.loader', [])
   return {
     restrict: 'A',
     scope: true,
-    link: function (scope, element) {
+    link: function (scope) {
       scope.progressData = Loader.progressData.total;
 
       var scaledPercent;
 
       scope.$watch('progressData.percent', function (percent) {
         scaledPercent = percent + (percent * 0.1);
-        element.css('width', scaledPercent + '%');
+        scope.percentComplete = scaledPercent + '%';
       });
     }
   };

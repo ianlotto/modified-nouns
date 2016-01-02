@@ -30,15 +30,18 @@ angular.module('modifiedNouns', [
 
   var levels = new $window.Array(ASSET_DATA.img.levels);
 
-  var level, levelData, leftDiff, topDiff;
+  var level, levelData, centerX, centerY;
 
-  var positionLevels = function (leftDiff, topDiff) {
+  var positionLevels = function (centerX, centerY) {
     for (var i = 0; i < levels.length; i++) {
       level = levels[i];
 
+      level.position.left = centerX - level.size.width / 2;
+      level.position.top = centerY - level.size.height / 2;
+
       level.element.css({
-        left: (level.position.left += leftDiff) + 'px',
-        top:  (level.position.top += topDiff) + 'px'
+        left: level.position.left + 'px',
+        top:  level.position.top + 'px'
       });
     }
   };
@@ -52,28 +55,29 @@ angular.module('modifiedNouns', [
     },
 
     positionLevel: function (level, left, top) {
-      levelData = level.data('level');
+      levelData = levels[ level.data('level') ];
 
-      leftDiff = left - levelData.position.left;
-      topDiff = top - levelData.position.top;
+      centerX = left + levelData.size.width / 2;
+      centerY = top + levelData.size.height / 2;
 
-      if(!leftDiff || !topDiff) {
-        leftDiff = 0;
-        topDiff = 0;
-      }
-
-      positionLevels(leftDiff, topDiff);
+      // TODO: only synch levels when drag / fling / zoom ends
+      positionLevels(centerX, centerY);
 
       return levelData;
     },
 
     scaleLevel: function (level, size, position) {
-      levelData = this.positionLevel(level, position.x, position.y);
+      levelData = levels[ level.data('level') ];
+
+      levelData.size.width = size.width;
+      levelData.size.height = size.height;
+
+      this.positionLevel(level, position.x, position.y);
 
       level.css({
         display: 'block',
-        width:  (levelData.size.width = size.width) + 'px',
-        height: (levelData.size.height = size.height) + 'px'
+        width:  size.width + 'px',
+        height: size.height + 'px'
       });
     }
 
@@ -113,7 +117,7 @@ angular.module('modifiedNouns', [
       ModifiedNouns.levels[order] = data;
       ModifiedNouns.levels[order].element = element;
 
-      element.data('level', data);
+      element.data('level', order);
     }
   };
 })

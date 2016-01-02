@@ -38,7 +38,7 @@ angular.module('modifiedNouns.fling', [])
     return pos;
   };
 
-  var increment = function (data, element) {
+  var increment = function (data, level) {
     i++;
 
     easeFactor = easeOut(i * FREQUENCY, DURATION, 3);
@@ -48,14 +48,14 @@ angular.module('modifiedNouns.fling', [])
 
     pos = bouncePos(pos, Limit.check(pos));
 
-    ModifiedNouns.positionLevel(element, pos.x, pos.y);
+    ModifiedNouns.positionLevel(level, pos.x, pos.y);
   };
 
-  var start = function (data, element) {
+  var start = function (data, level) {
     i = 0;
 
-    increment(data, element);
-    cancel = $interval(increment, FREQUENCY, COUNT, false, data, element);
+    increment(data, level);
+    cancel = $interval(increment, FREQUENCY, COUNT, false, data, level);
 
     return cancel;
   };
@@ -88,18 +88,18 @@ angular.module('modifiedNouns.fling', [])
       return idleTime <= MAX_IDLE_TIME && numPoints >= MIN_POINTS;
     };
 
-    var create = function (element, startPoint, lasPoint) {
+    var create = function (level, startPoint, lasPoint) {
       flingVector = Geometry.registerVector(startPoint, lasPoint);
       flingLength = flingVector.length * (flingVector.duration / 50);
 
-      elRect = element[0].getBoundingClientRect();
+      elRect = level.element[0].getBoundingClientRect();
 
       flingData.startX  = elRect.left;
       flingData.finishX = elRect.left + (flingVector.dir[0] * flingLength);
       flingData.startY  = elRect.top;
       flingData.finishY = elRect.top + (flingVector.dir[1] * flingLength);
 
-      FlingAnimation.start(flingData, element);
+      FlingAnimation.start(flingData, level);
     };
 
     return {
@@ -113,7 +113,7 @@ angular.module('modifiedNouns.fling', [])
           $document.on('dragend', onEnd);
         });
 
-        var onEnd = function () {
+        var onEnd = function (e, level) {
           lastPoint = Geometry.points[ Geometry.points.length - 1 ];
 
           if(!!lastPoint) {
@@ -124,7 +124,7 @@ angular.module('modifiedNouns.fling', [])
                 Geometry.points.length - MIN_POINTS
               ];
 
-              create(element, startPoint, lastPoint);
+              create(level, startPoint, lastPoint);
             }
           }
 

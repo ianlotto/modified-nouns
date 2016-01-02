@@ -20,20 +20,20 @@ angular.module('modifiedNouns.drag', [])
     return pos;
   };
 
-  var onStart = function (element, eventPos) {
+  var onStart = function (level, eventPos) {
     Geometry.clearData();
 
-    elementRect = element[0].getBoundingClientRect();
+    elementRect = level.element[0].getBoundingClientRect();
 
     pos.x = elementRect.left;
     pos.y = elementRect.top;
 
-    Limit.setXY(elementRect, element.parent()[0].getBoundingClientRect());
+    Limit.setXY(elementRect, level.element.parent()[0].getBoundingClientRect());
 
     point = Geometry.registerPoint(eventPos);
   };
 
-  var onMove = function (element, eventPos) {
+  var onMove = function (level, eventPos) {
     vector = Geometry.registerVector(point, eventPos);
     point  = Geometry.registerPoint(eventPos); // New, latest point
 
@@ -42,23 +42,28 @@ angular.module('modifiedNouns.drag', [])
 
     pos = constrainPos(pos, Limit.check(pos));
 
-    ModifiedNouns.positionLevel(element, pos.x, pos.y);
+    ModifiedNouns.positionLevel(level, pos.x, pos.y);
   };
 
   return {
     bind: function (element) {
+      var level;
+
       element.on(Input.EVENTS.start, function (e) {
-        // Allow only one drag session at a time
-        if(!!sessionId || e.button > 0) { return; }
+        level = ModifiedNouns.levels[ element.data('level.order') ];
+
+        if(!!sessionId || e.button > 0 || !level) {
+          return;
+        }
 
         eventData = Input.getTouches(e)[0];
 
         if(!!eventData) {
           sessionId = eventData.id;
 
-          onStart(element, eventData);
+          onStart(level, eventData);
 
-          element.triggerHandler('dragstart');
+          element.triggerHandler('dragstart', level);
 
           $document.on(Input.EVENTS.move, _onMove);
           $document.on(Input.EVENTS.end, _onEnd);
@@ -69,7 +74,7 @@ angular.module('modifiedNouns.drag', [])
         eventData = Input.activeTouches[sessionId];
 
         if(!!eventData) {
-          onMove(element, eventData);
+          onMove(level, eventData);
         }
       };
 
@@ -90,7 +95,7 @@ angular.module('modifiedNouns.drag', [])
           if(Input.activeTouches.hasOwnProperty(id)) {
             // Delegate drag session to another active touch
             sessionId = id;
-            onStart(element, Input.activeTouches[id]);
+            onStart(level, Input.activeTouches[id]);
 
             return;
           }
@@ -100,7 +105,7 @@ angular.module('modifiedNouns.drag', [])
       var _endDrag = function () {
         sessionId = null;
 
-        $document.triggerHandler('dragend');
+        $document.triggerHandler('dragend', level);
 
         $document.off(Input.EVENTS.move, _onMove);
         $document.off(Input.EVENTS.end, _onEnd);

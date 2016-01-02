@@ -51,14 +51,16 @@ angular.module('modifiedNouns', [
     levels: levels,
 
     init: function () {
-      this.positionLevel(levels[0].element, 0, 0);
+      this.positionLevel(levels[0], 0, 0);
+    },
+
+    hideLevel: function (level) {
+      level.element.css('display', 'none');
     },
 
     positionLevel: function (level, left, top) {
-      levelData = levels[ level.data('level') ];
-
-      centerX = left + levelData.size.width / 2;
-      centerY = top + levelData.size.height / 2;
+      centerX = left + level.size.width / 2;
+      centerY = top + level.size.height / 2;
 
       positionLevels(centerX, centerY);
 
@@ -66,14 +68,12 @@ angular.module('modifiedNouns', [
     },
 
     scaleLevel: function (level, size, position) {
-      levelData = levels[ level.data('level') ];
-
-      levelData.size.width = size.width;
-      levelData.size.height = size.height;
+      level.size.width = size.width;
+      level.size.height = size.height;
 
       this.positionLevel(level, position.x, position.y);
 
-      level.css({
+      level.element.css({
         display: 'block',
         width:  size.width + 'px',
         height: size.height + 'px'
@@ -116,7 +116,7 @@ angular.module('modifiedNouns', [
       ModifiedNouns.levels[order] = data;
       ModifiedNouns.levels[order].element = element;
 
-      element.data('level', order);
+      element.data('level.order', order);
     }
   };
 })

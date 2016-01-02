@@ -28,10 +28,6 @@ angular.module('modifiedNouns.zoom', [])
 
   var wheelTouch, prevLevel, level, position, cancel;
 
-  var hideElement = function (element) {
-    element.css('display', 'none');
-  };
-
   var getScaledSize = function (size, z) {
     size.width = ModifiedNouns.FULL_SIZE.width * z / maxZ;
     size.height = ModifiedNouns.FULL_SIZE.height * z / maxZ;
@@ -117,10 +113,10 @@ angular.module('modifiedNouns.zoom', [])
     size = getScaledSize(size, pos.z);
     position = getScaledPosition(level, size, wheelTouch);
 
-    ModifiedNouns.scaleLevel(level.element, size, position);
+    ModifiedNouns.scaleLevel(level, size, position);
 
     if(!!prevLevel && prevLevel !== level) {
-      hideElement(prevLevel.element);
+      ModifiedNouns.hideLevel(prevLevel);
     }
   };
 

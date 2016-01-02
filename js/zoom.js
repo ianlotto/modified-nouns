@@ -4,8 +4,6 @@ angular.module('modifiedNouns.zoom', [])
 
 .factory('Zoom', function ($window, $timeout, Limit, Input, ModifiedNouns) {
 
-  var zooming = false;
-
   var maxZ = 1;
   var minZ = $window.Math.pow(2, -ModifiedNouns.levels.length);
   var scalePower = 0;
@@ -32,11 +30,6 @@ angular.module('modifiedNouns.zoom', [])
 
   var hideElement = function (element) {
     element.css('display', 'none');
-  };
-
-  var setZoomState = function (element, state) {
-    element[state ? 'addClass' : 'removeClass']('zooming');
-    zooming = state;
   };
 
   var getScaledSize = function (size, z) {
@@ -132,23 +125,26 @@ angular.module('modifiedNouns.zoom', [])
   };
 
   return {
+    zooming: false,
+
     bind: function (element) {
+      var _zoom = this;
+
       element.on('wheel', function (e) {
         e.preventDefault();
 
         wheelTouch = Input.getWheelTouch(e);
 
         if(!!wheelTouch.dir && element[0] !== e.target) {
-
-          if(!zooming) {
-            setZoomState(element, true);
-          }
+          _zoom.zooming = true;
 
           if(!!cancel) {
             $timeout.cancel(cancel);
           }
 
-          cancel = $timeout(setZoomState, 200, false, element, false);
+          cancel = $timeout(function () {
+            _zoom.zooming = false;
+          }, 200);
 
           zoom(wheelTouch);
         }

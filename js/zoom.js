@@ -8,11 +8,22 @@ angular.module('modifiedNouns.zoom', [])
   var zooming = false;
 
   var levels = ModifiedNouns.levels;
-  var pos = { z: 1 };
   var size = {};
   var offset = {};
 
   var wheelTouch, prevLevel, level, levelSwitch, position, cancel;
+
+  var maxZ = 1;
+  var minZ = $window.Math.pow(2, -ModifiedNouns.levels.length);
+
+  while($window.Math.round(minZ) !== minZ) {
+    maxZ *= 10;
+    minZ *= 10;
+  }
+
+  var pos = { z: maxZ };
+
+  Limit.setZ(maxZ, minZ);
 
   var hideElement = function (element) {
     element.css('display', 'none');
@@ -93,8 +104,6 @@ angular.module('modifiedNouns.zoom', [])
       hideElement(prevLevel.element);
     }
   };
-
-  Limit.setZ(1, $window.Math.pow(2, -ModifiedNouns.levels.length));
 
   return {
     bind: function (element) {

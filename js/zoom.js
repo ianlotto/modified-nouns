@@ -19,6 +19,7 @@ angular.module('modifiedNouns.zoom', [])
   Limit.setZ(maxZ, minZ);
 
   var baseIncrement = $window.Math.pow(10, scalePower - 2);
+  var curIncrement = baseIncrement;
 
   var levels = ModifiedNouns.levels;
   var scaledRanges = new $window.Array(ModifiedNouns.levels.length);
@@ -27,7 +28,7 @@ angular.module('modifiedNouns.zoom', [])
   var size = {};
   var offset = {};
 
-  var wheelTouch, prevLevel, level, levelSwitch, position, cancel;
+  var wheelTouch, prevLevel, level, position, cancel;
 
   var hideElement = function (element) {
     element.css('display', 'none');
@@ -66,17 +67,24 @@ angular.module('modifiedNouns.zoom', [])
     return pos;
   };
 
-  var findLevel = function (z, level) {
+  var findLevel = function (pos, level) {
     // Check the current level first
-    if(!level || !inRange(z, scaledRanges[level.order])) {
+    if(!level || !inRange(pos.z, scaledRanges[level.order])) {
       for (var i = 0; i < levels.length; i++) {
         // Lazy-build scaled range
         if(!scaledRanges[i]) {
           buildScaledRange(i);
         }
 
-        if(inRange(z, scaledRanges[i])) {
+        if(inRange(pos.z, scaledRanges[i])) {
+          // Correct pos.z to new increment
+          if(curIncrement !== scaledRanges[i].increment) {
+            pos.z += level.order < i ? scaledRanges[i].increment : curIncrement;
+          }
+
           level = levels[i];
+          curIncrement = scaledRanges[i].increment;
+
           break;
         }
       }
@@ -90,33 +98,35 @@ angular.module('modifiedNouns.zoom', [])
   };
 
   var buildScaledRange = function (i) {
-    // get increments of each range
     scaledRanges[i] = {};
+
     scaledRanges[i].max = levels[i].range.max * maxZ;
     scaledRanges[i].min = levels[i].range.min * maxZ;
+    scaledRanges[i].increment = baseIncrement;
+
+    while(
+      scaledRanges[i].max % scaledRanges[i].increment !== 0 ||
+      scaledRanges[i].min % scaledRanges[i].increment !== 0
+    ) {
+      scaledRanges[i].increment /= 2;
+    }
 
     return scaledRanges[i];
   };
 
   var zoom = function (wheelTouch) {
-    pos.z += wheelTouch.dir * baseIncrement;
+    pos.z += wheelTouch.dir * curIncrement;
     pos = constrainScale(pos, Limit.check(pos));
 
     prevLevel = level;
-    level = findLevel(pos.z, level);
-
-    levelSwitch = !!prevLevel && prevLevel !== level;
+    level = findLevel(pos, level);
 
     size = getScaledSize(size, pos.z);
-
-    // When switching levels, use prevLevel for calc to ensure smooth transition
-    position = getScaledPosition(
-      levelSwitch ? prevLevel : level, size, wheelTouch
-    );
+    position = getScaledPosition(level, size, wheelTouch);
 
     ModifiedNouns.scaleLevel(level.element, size, position);
 
-    if(levelSwitch) {
+    if(!!prevLevel && prevLevel !== level) {
       hideElement(prevLevel.element);
     }
   };

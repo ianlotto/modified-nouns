@@ -95,7 +95,9 @@ angular.module('modifiedNouns.drag', [])
       var _onMove = function () {
         eventData = Input.activeTouches[sessionId];
 
-        if(!!eventData) {
+        // TODO: should prob kill drag session instead of suppressing this
+        // But youd want to end the drag without triggering event? - fling
+        if(!!eventData && Input.activeTouches.length === 1) {
           onMove(level, eventData);
         }
       };

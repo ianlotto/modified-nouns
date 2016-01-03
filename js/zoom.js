@@ -121,14 +121,21 @@ angular.module('modifiedNouns.zoom', [])
         ModifiedNouns.hideLevel(prevLevel);
       }
     };
-    var startPoint, endPoint, zoomVector;
+
+    var startPoint, endPoint, zoomVector, prevVector;
+
     return {
       zooming: false,
+
+      // with touch: if both are moving, we zoom, else we drag.
+
+      // there should be an either / or with zoom / drag.
+      // let a zoom override and stop a drag session?
 
       bind: function (element) {
         var _zoom = this;
 
-        element.on(Input.EVENTS.move, function (e) {
+        element.on(Input.EVENTS.start, function (e) {
           if(Input.activeTouches.length > 1 && element[0] !== e.target) {
 
             startPoint = Input.activeTouches[ Input.orderedTouches[0] ];
@@ -136,10 +143,29 @@ angular.module('modifiedNouns.zoom', [])
 
             zoomVector = Geometry.createVector(startPoint, endPoint);
 
-            console.log(zoomVector);
+          }
+        });
 
-            // Draw a line between the two touches. its center is
-            // pos.x/y
+        element.on(Input.EVENTS.move, function (e) {
+          if(Input.activeTouches.length > 1 && element[0] !== e.target) {
+
+            startPoint = Input.activeTouches[ Input.orderedTouches[0] ];
+            endPoint = Input.activeTouches[ Input.orderedTouches[1] ];
+
+            //TODO: code to analyze the two vectors and decide if we should
+            // drag or zoom
+            prevVector = zoomVector;
+            zoomVector = Geometry.createVector(startPoint, endPoint);
+
+            var centerX = zoomVector.startX + zoomVector.x / 2;
+            var centerY = zoomVector.startY + zoomVector.y / 2;
+
+            var dir = !!prevVector && zoomVector.length > prevVector.length ? 1 : -1;
+
+            var zoomObj = { x: centerX, y: centerY, dir: dir };
+
+            // TODO: try to slow this down a bit
+            zoom(zoomObj);
           }
         });
 

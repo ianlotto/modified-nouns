@@ -101,6 +101,7 @@ angular.module('modifiedNouns.drag', [])
       };
 
       var _onEnd = function () {
+
         if(!Input.activeTouches[sessionId]) {
 
           if(Input.activeTouches.length > 0) {
@@ -113,15 +114,9 @@ angular.module('modifiedNouns.drag', [])
       };
 
       var _delegateDrag = function () {
-        for (var id in Input.activeTouches) {
-          if(Input.activeTouches.hasOwnProperty(id)) {
-            // Delegate drag session to another active touch
-            sessionId = id;
-            onStart(level, Input.activeTouches[id]);
-
-            return;
-          }
-        }
+        // Delegate drag session to first active touch
+        sessionId = Input.orderedTouches[0];
+        onStart(level, Input.activeTouches[sessionId]);
       };
 
       var _endDrag = function () {

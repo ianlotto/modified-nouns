@@ -24,6 +24,8 @@ angular.module('modifiedNouns.geometry', [])
 
     createVector: function (startPoint, finishPoint) {
       finishTime = $window.Date.now();
+      startPoint.time = startPoint.time || finishTime;
+
       duration = finishTime - startPoint.time;
 
       diffX = finishPoint.x - startPoint.x;

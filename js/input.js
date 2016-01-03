@@ -11,6 +11,7 @@ angular.module('modifiedNouns.input', [])
   };
 
   var activeTouches = { length: 0 };
+  var orderedTouches = [];
   var typeExp = /(mouse|wheel)/i;
 
   var delta, typeMatch, touches, _touches, touch, _touch;
@@ -54,20 +55,25 @@ angular.module('modifiedNouns.input', [])
     return _touches;
   };
 
+  var touchIndex;
+
   var updateActiveTouches = function (e, destroy) {
     touches = getTouches(e);
 
     for (var i = 0; i < touches.length; i++) {
       touch = touches[i];
+      touchIndex = orderedTouches.indexOf(touch.id);
 
       if(destroy) {
         delete activeTouches[touch.id];
+        touchIndex >= 0 && orderedTouches.splice(touchIndex, 1);
       } else {
         activeTouches[touch.id] = touch;
+        touchIndex === -1 && orderedTouches.push(touch.id);
       }
     }
 
-    activeTouches.length = $window.Object.keys(activeTouches).length - 1;
+    activeTouches.length = orderedTouches.length;
   };
 
   $document.on(EVENTS.start, function (e) {
@@ -85,6 +91,7 @@ angular.module('modifiedNouns.input', [])
   return {
     EVENTS: EVENTS,
     activeTouches: activeTouches,
+    orderedTouches: orderedTouches,
     getTouches: getTouches,
     getWheelTouch: getWheelTouch
   };

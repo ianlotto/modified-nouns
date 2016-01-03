@@ -126,6 +126,12 @@ angular.module('modifiedNouns.zoom', [])
     bind: function (element) {
       var _zoom = this;
 
+      // on touch, if there are two or more activeTouches use the first two
+      // for a zoom. Draw a line between the two touches. it's center is
+      // pos.x/y
+
+
+
       element.on('wheel', function (e) {
         e.preventDefault();
 

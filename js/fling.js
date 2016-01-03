@@ -75,7 +75,7 @@ angular.module('modifiedNouns.fling', [])
 })
 
 .factory('Fling',
-  function ($window, $document, Geometry, Input, FlingAnimation) {
+  function ($window, $document, Geometry, Input, Drag, FlingAnimation) {
 
     var MAX_IDLE_TIME = 25;
     var MIN_POINTS = 6;
@@ -89,7 +89,7 @@ angular.module('modifiedNouns.fling', [])
     };
 
     var create = function (level, startPoint, lasPoint) {
-      flingVector = Geometry.registerVector(startPoint, lasPoint);
+      flingVector = Geometry.createVector(startPoint, lasPoint);
       flingLength = flingVector.length * (flingVector.duration / 50);
 
       fling.startX  = level.position.left;
@@ -112,14 +112,14 @@ angular.module('modifiedNouns.fling', [])
         });
 
         var onEnd = function (e, level) {
-          lastPoint = Geometry.points[ Geometry.points.length - 1 ];
+          lastPoint = Drag.points[ Drag.points.length - 1 ];
 
           if(!!lastPoint) {
             idleTime = $window.Date.now() - lastPoint.time;
 
-            if(decide(idleTime, Geometry.points.length)) {
-              startPoint = Geometry.points[
-                Geometry.points.length - MIN_POINTS
+            if(decide(idleTime, Drag.points.length)) {
+              startPoint = Drag.points[
+                Drag.points.length - MIN_POINTS
               ];
 
               create(level, startPoint, lastPoint);

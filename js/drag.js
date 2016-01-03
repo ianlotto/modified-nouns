@@ -4,9 +4,26 @@ angular.module('modifiedNouns.drag', [])
 
 .factory('Drag', function ($document, Geometry, Limit, Input, ModifiedNouns) {
 
+  var points = [];
+  var vectors = [];
   var pos = {};
 
   var vector, point, eventData, sessionId;
+
+  var register = function (item, array) {
+    array.push(item);
+
+    if(array.length > 10) {
+      array.shift();
+    }
+  };
+
+  var clearData = function () {
+    while (points.length > 0 || vectors.length > 0) {
+      points.pop();
+      vectors.pop();
+    }
+  };
 
   var constrainPos = function (pos, checkResult) {
     pos.x = checkResult.x === -1 ?
@@ -21,19 +38,23 @@ angular.module('modifiedNouns.drag', [])
   };
 
   var onStart = function (level, eventPos) {
-    Geometry.clearData();
+    clearData();
 
     pos.x = level.position.left;
     pos.y = level.position.top;
 
     Limit.setXY(level.size, level.element.parent()[0].getBoundingClientRect());
 
-    point = Geometry.registerPoint(eventPos);
+    point = Geometry.createPoint(eventPos);
+    register(point, points);
   };
 
   var onMove = function (level, eventPos) {
-    vector = Geometry.registerVector(point, eventPos);
-    point  = Geometry.registerPoint(eventPos); // New, latest point
+    vector = Geometry.createVector(point, eventPos);
+    register(vector, vectors);
+
+    point = Geometry.createPoint(eventPos); // New, latest point
+    register(point, points);
 
     pos.x = pos.x + vector.x;
     pos.y = pos.y + vector.y;
@@ -44,6 +65,9 @@ angular.module('modifiedNouns.drag', [])
   };
 
   return {
+    points: points,
+    vectors: vectors,
+
     bind: function (element) {
       var level;
 

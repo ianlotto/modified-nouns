@@ -4,19 +4,9 @@ angular.module('modifiedNouns.geometry', [])
 
 .factory('Geometry', function ($window) {
 
-  var point, vector, diffX, diffY, finishTime, length, duration;
+  var diffX, diffY, finishTime, length, duration;
 
   return {
-    points: [],
-    vectors: [],
-
-    _register: function (item, array) {
-      array.push(item);
-
-      if(array.length > 10) {
-        array.shift();
-      }
-    },
 
     getLength: function (a, b) {
       return $window.Math.sqrt(
@@ -24,26 +14,15 @@ angular.module('modifiedNouns.geometry', [])
       );
     },
 
-    clearData: function () {
-      while (this.points.length > 0 || this.vectors.length > 0) {
-        this.points.pop();
-        this.vectors.pop();
-      }
-    },
-
-    registerPoint: function (data) {
-      point = {
+    createPoint: function (data) {
+      return {
         x: data.x,
         y: data.y,
         time: $window.Date.now()
       };
-
-      this._register(point, this.points);
-
-      return point;
     },
 
-    registerVector: function (startPoint, finishPoint) {
+    createVector: function (startPoint, finishPoint) {
       finishTime = $window.Date.now();
       duration = finishTime - startPoint.time;
 
@@ -51,7 +30,7 @@ angular.module('modifiedNouns.geometry', [])
       diffY = finishPoint.y - startPoint.y;
       length = this.getLength(diffX, diffY);
 
-      vector = {
+      return {
         x: diffX,
         y: diffY,
         startX: startPoint.x,
@@ -68,10 +47,6 @@ angular.module('modifiedNouns.geometry', [])
 
         rate: length / duration
       };
-
-      this._register(vector, this.vectors);
-
-      return vector;
     }
   };
 

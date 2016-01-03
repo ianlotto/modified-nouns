@@ -48,8 +48,7 @@ button {
 [load-progress] > div {
   width: 0%;
   height: inherit;
-
-  background: linear-gradient(90deg, transparent, rgb(255,255,255) 90%, transparent);
+  background-color: rgba(255,255,255,.7);
 }
 
 [toggle-fullscreen] {

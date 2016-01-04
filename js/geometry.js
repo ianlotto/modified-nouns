@@ -41,7 +41,7 @@ angular.module('modifiedNouns.geometry', [])
         finishY: finishPoint.y,
 
         length: length,
-        dir: [diffX / length, diffY / length],
+        dir: [diffX / length || 0, diffY / length || 0],
 
         startTime: startPoint.time,
         finishTime: finishTime,

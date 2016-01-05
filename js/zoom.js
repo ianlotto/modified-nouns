@@ -105,6 +105,18 @@ angular.module('modifiedNouns.zoom', [])
       return scaledRanges[i];
     };
 
+    var isZoom = function (touch1, touch2) {
+             // One touch is stationary
+      return (touch1.dir[0] === 0 && touch1.dir[1] === 0) ||
+             (touch2.dir[0] === 0 && touch2.dir[1] === 0) ||
+             // One of the axes are moving in different directions
+             (touch1.dir[0] < 0 && touch2.dir[0] > 0) ||
+             (touch1.dir[0] > 0 && touch2.dir[0] < 0) ||
+             (touch1.dir[1] < 0 && touch2.dir[1] > 0) ||
+             (touch1.dir[1] > 0 && touch2.dir[1] < 0) ||
+             false;
+    };
+
     var zoom = function (wheelTouch) {
       pos.z += wheelTouch.dir * curIncrement;
       pos = constrainScale(pos, Limit.check(pos));
@@ -122,50 +134,64 @@ angular.module('modifiedNouns.zoom', [])
       }
     };
 
-    var startPoint, endPoint, zoomVector, prevVector;
-
     return {
       zooming: false,
 
-      // with touch: if both are moving, we zoom, else we drag.
-
-      // there should be an either / or with zoom / drag.
+      // there should be an either/or with zoom/drag.
       // let a zoom override and stop a drag session?
 
       bind: function (element) {
         var _zoom = this;
 
-        element.on(Input.EVENTS.start, function (e) {
-          if(Input.activeTouches.length > 1 && element[0] !== e.target) {
+        var i = 0;
 
-            startPoint = Input.activeTouches[ Input.orderedTouches[0] ];
-            endPoint = Input.activeTouches[ Input.orderedTouches[1] ];
+        var startPoint, endPoint, zoomVector, prevVector;
+        var prevStart, prevEnd;
 
-            zoomVector = Geometry.createVector(startPoint, endPoint);
-
-          }
-        });
+        //TODO dont use Input start - just move, when we have something to compare to.
 
         element.on(Input.EVENTS.move, function (e) {
           if(Input.activeTouches.length > 1 && element[0] !== e.target) {
 
+            i++;
+
+            if(i % 2 !== 0) {
+              return;
+            }
+
+            prevStart = startPoint;
+            prevEnd = endPoint;
+
             startPoint = Input.activeTouches[ Input.orderedTouches[0] ];
             endPoint = Input.activeTouches[ Input.orderedTouches[1] ];
 
-            //TODO: code to analyze the two vectors and decide if we should
-            // drag or zoom
+            var startVec = Geometry.createVector(prevStart, startPoint);
+            var endVec = Geometry.createVector(prevEnd, endPoint);
+
             prevVector = zoomVector;
             zoomVector = Geometry.createVector(startPoint, endPoint);
 
-            var centerX = zoomVector.startX + zoomVector.x / 2;
-            var centerY = zoomVector.startY + zoomVector.y / 2;
+            var lengthDiff = $window.Math.abs(zoomVector.length - prevVector.length);
 
-            var dir = !!prevVector && zoomVector.length > prevVector.length ? 1 : -1;
+            if(isZoom(startVec, endVec)) {
+              console.log('ZOOM');
 
-            var zoomObj = { x: centerX, y: centerY, dir: dir };
+              var centerX = zoomVector.startX + zoomVector.x / 2;
+              var centerY = zoomVector.startY + zoomVector.y / 2;
 
-            // TODO: try to slow this down a bit
-            zoom(zoomObj);
+              var dir = !!prevVector && zoomVector.length > prevVector.length ? 1 : -1;
+
+              var zoomObj = { x: centerX, y: centerY, dir: dir };
+
+              Input.zooming = true;
+
+              zoom(zoomObj);
+
+            } else {
+              console.log('PAN');
+              Input.zooming = false;
+            }
+
           }
         });
 

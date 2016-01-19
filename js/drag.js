@@ -19,10 +19,8 @@ angular.module('modifiedNouns.drag', [])
   };
 
   var clearData = function () {
-    while (points.length > 0 || vectors.length > 0) {
-      points.pop();
-      vectors.pop();
-    }
+    points.length = 0;
+    vectors.length = 0;
   };
 
   var constrainPos = function (pos, checkResult) {
@@ -95,15 +93,12 @@ angular.module('modifiedNouns.drag', [])
       var _onMove = function () {
         eventData = Input.activeTouches[sessionId];
 
-        // TODO: should prob kill drag session instead of suppressing this
-        // But youd want to end the drag without triggering event? - fling
-        if(!!eventData && Input.activeTouches.length === 1) {
+        if(!!eventData) {
           onMove(level, eventData);
         }
       };
 
       var _onEnd = function () {
-
         if(!Input.activeTouches[sessionId]) {
 
           if(Input.activeTouches.length > 0) {
@@ -118,6 +113,7 @@ angular.module('modifiedNouns.drag', [])
       var _delegateDrag = function () {
         // Delegate drag session to first active touch
         sessionId = Input.orderedTouches[0];
+
         onStart(level, Input.activeTouches[sessionId]);
       };
 
@@ -129,6 +125,25 @@ angular.module('modifiedNouns.drag', [])
         $document.off(Input.EVENTS.move, _onMove);
         $document.off(Input.EVENTS.end, _onEnd);
       };
+
+      // TODO: error on mobile
+
+      $document.on('zoomstart', function (e, level) {
+        if(!!level && level.element === element) {
+          sessionId = null; // Kill any current drag sessions
+        }
+      });
+
+      $document.on('zoomend', function (e, level) {
+
+        if(!!level && level.element === element) {
+          // TODO: better way to check for this?
+          if(Input.orderedTouches[0] !== 'mouse') {
+            _onEnd();
+          }
+        }
+
+      });
 
     }
   };

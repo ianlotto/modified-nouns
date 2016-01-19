@@ -60,6 +60,7 @@ angular.module('modifiedNouns.fling', [])
     return cancel;
   };
 
+  // TODO: kill fling when zooming begins
   var stop = function () {
     if (angular.isDefined(cancel)) {
       $interval.cancel(cancel);

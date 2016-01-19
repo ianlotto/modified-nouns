@@ -66,10 +66,10 @@ angular.module('modifiedNouns.input', [])
 
       if(destroy) {
         delete activeTouches[touch.id];
-        touchIndex >= 0 && orderedTouches.splice(touchIndex, 1);
+        if(touchIndex >= 0) { orderedTouches.splice(touchIndex, 1); }
       } else {
         activeTouches[touch.id] = touch;
-        touchIndex === -1 && orderedTouches.push(touch.id);
+        if(touchIndex === -1) { orderedTouches.push(touch.id); }
       }
     }
 

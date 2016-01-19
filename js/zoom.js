@@ -3,7 +3,7 @@
 angular.module('modifiedNouns.zoom', [])
 
 .factory('Zoom',
-  function ($window, $timeout, Geometry, Limit, Input, ModifiedNouns) {
+  function ($window, $document, $timeout, Geometry, Limit, Input, ModifiedNouns) {
 
     var maxZ = 1;
     var minZ = $window.Math.pow(2, -ModifiedNouns.levels.length);
@@ -27,7 +27,7 @@ angular.module('modifiedNouns.zoom', [])
     var size = {};
     var offset = {};
 
-    var wheelTouch, prevLevel, level, position, cancel;
+    var zoomTouch, prevLevel, level, position, cancel;
 
     var getScaledSize = function (size, z) {
       size.width = ModifiedNouns.FULL_SIZE.width * z / maxZ;
@@ -117,15 +117,15 @@ angular.module('modifiedNouns.zoom', [])
              false;
     };
 
-    var zoom = function (wheelTouch) {
-      pos.z += wheelTouch.dir * curIncrement;
+    var zoom = function (zoomTouch) {
+      pos.z += zoomTouch.dir * curIncrement;
       pos = constrainScale(pos, Limit.check(pos));
 
       prevLevel = level;
       level = findLevel(pos, level);
 
       size = getScaledSize(size, pos.z);
-      position = getScaledPosition(level, size, wheelTouch);
+      position = getScaledPosition(level, size, zoomTouch);
 
       ModifiedNouns.scaleLevel(level, size, position);
 
@@ -135,83 +135,94 @@ angular.module('modifiedNouns.zoom', [])
     };
 
     return {
-      zooming: false,
-
-      // there should be an either/or with zoom/drag.
-      // let a zoom override and stop a drag session?
 
       bind: function (element) {
-        var _zoom = this;
+        var zooming = false;
 
         var i = 0;
 
-        var startPoint, endPoint, zoomVector, prevVector;
-        var prevStart, prevEnd;
+        var touches = [];
+        var prevTouches = [];
+        var touchVecs = [];
 
-        //TODO dont use Input start - just move, when we have something to compare to.
+        var zoomVector, prevZoomVector;
+
+        var _startZoom = function (zoomObj) {
+          if(!zooming) {
+
+            if(!level) {
+              level = findLevel(pos);
+            }
+
+            $document.triggerHandler('zoomstart', level);
+          }
+
+          zooming = true;
+
+          if(!!cancel) { $timeout.cancel(cancel); }
+          cancel = $timeout(_endZoom, 200);
+
+          zoom(zoomObj);
+        };
+
+        var _endZoom = function () {
+          if(zooming) {
+            $document.triggerHandler('zoomend', level);
+          }
+
+          zooming = false;
+        };
+
+        var _onMove = function () {
+          prevTouches[0] = touches[0];
+          prevTouches[1] = touches[1];
+
+          touches[0] = Input.activeTouches[ Input.orderedTouches[0] ];
+          touches[1] = Input.activeTouches[ Input.orderedTouches[1] ];
+
+          prevZoomVector = zoomVector;
+          zoomVector = Geometry.createVector(touches[0], touches[1]);
+
+          if(!prevTouches[0] || !prevTouches[1]) {
+            return;
+          }
+
+          touchVecs[0] = Geometry.createVector(prevTouches[0], touches[0]);
+          touchVecs[1] = Geometry.createVector(prevTouches[1], touches[1]);
+
+          if(isZoom(touchVecs[0], touchVecs[1])) {
+
+            zoomTouch = {
+              x: zoomVector.startX + zoomVector.x / 2,
+              y: zoomVector.startY + zoomVector.y / 2,
+              dir: zoomVector.length > prevZoomVector.length ? 1 : -1
+            };
+
+            _startZoom(zoomTouch);
+          } else {
+            _endZoom();
+          }
+        };
+
+        // TODO: double-tap touch
 
         element.on(Input.EVENTS.move, function (e) {
           if(Input.activeTouches.length > 1 && element[0] !== e.target) {
-
             i++;
 
-            if(i % 2 !== 0) {
-              return;
+            if(i % 2 === 0) { // Throttle for better data
+              _onMove();
             }
-
-            prevStart = startPoint;
-            prevEnd = endPoint;
-
-            startPoint = Input.activeTouches[ Input.orderedTouches[0] ];
-            endPoint = Input.activeTouches[ Input.orderedTouches[1] ];
-
-            var startVec = Geometry.createVector(prevStart, startPoint);
-            var endVec = Geometry.createVector(prevEnd, endPoint);
-
-            prevVector = zoomVector;
-            zoomVector = Geometry.createVector(startPoint, endPoint);
-
-            var lengthDiff = $window.Math.abs(zoomVector.length - prevVector.length);
-
-            if(isZoom(startVec, endVec)) {
-              console.log('ZOOM');
-
-              var centerX = zoomVector.startX + zoomVector.x / 2;
-              var centerY = zoomVector.startY + zoomVector.y / 2;
-
-              var dir = !!prevVector && zoomVector.length > prevVector.length ? 1 : -1;
-
-              var zoomObj = { x: centerX, y: centerY, dir: dir };
-
-              Input.zooming = true;
-
-              zoom(zoomObj);
-
-            } else {
-              console.log('PAN');
-              Input.zooming = false;
-            }
-
           }
         });
 
         element.on('wheel', function (e) {
           e.preventDefault();
 
-          wheelTouch = Input.getWheelTouch(e);
+          zoomTouch = Input.getWheelTouch(e);
 
-          if(!!wheelTouch.dir && element[0] !== e.target) {
-            _zoom.zooming = true;
-
-            if(!!cancel) {
-              $timeout.cancel(cancel);
-            }
-
-            cancel = $timeout(function () {
-              _zoom.zooming = false;
-            }, 200);
-
-            zoom(wheelTouch);
+          if(!!zoomTouch.dir && element[0] !== e.target) {
+            _startZoom(zoomTouch);
           }
         });
       }

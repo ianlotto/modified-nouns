@@ -79,14 +79,31 @@ angular.module('modifiedNouns.drag', [])
         eventData = Input.getTouches(e)[0];
 
         if(!!eventData) {
-          sessionId = eventData.id;
+          _startDrag(eventData);
+        }
+      });
 
-          onStart(level, eventData);
+      $document.on('zoomstart', function (e, _level) {
+        if(!!_level && _level.element === element) {
+          // TODO: looks like zoomstart can be fired multiple times before
+          // zoomend?
+          console.log('zoomstart: ', sessionId);
+          _endDrag();
+        }
+      });
 
-          element.triggerHandler('dragstart', level);
+      $document.on('zoomend', function (e, _level) {
+        if(!!_level && _level.element === element) {
+          // Update current level reference,
+          // As this may have changed since zoom began
+          level = _level;
 
-          $document.on(Input.EVENTS.move, _onMove);
-          $document.on(Input.EVENTS.end, _onEnd);
+          // TODO: better way to check for this?
+          if(Input.activeTouches.length > 0 && Input.orderedTouches[0] !== 'mouse') {
+            console.log('zoomend: ', sessionId);
+
+            _startDrag(Input.activeTouches[ Input.orderedTouches[0] ]);
+          }
         }
       });
 
@@ -113,8 +130,18 @@ angular.module('modifiedNouns.drag', [])
       var _delegateDrag = function () {
         // Delegate drag session to first active touch
         sessionId = Input.orderedTouches[0];
-
         onStart(level, Input.activeTouches[sessionId]);
+      };
+
+      var _startDrag = function (eventData) {
+        sessionId = eventData.id;
+
+        onStart(level, eventData);
+
+        element.triggerHandler('dragstart', level);
+
+        $document.on(Input.EVENTS.move, _onMove);
+        $document.on(Input.EVENTS.end, _onEnd);
       };
 
       var _endDrag = function () {
@@ -125,25 +152,6 @@ angular.module('modifiedNouns.drag', [])
         $document.off(Input.EVENTS.move, _onMove);
         $document.off(Input.EVENTS.end, _onEnd);
       };
-
-      // TODO: error on mobile
-
-      $document.on('zoomstart', function (e, level) {
-        if(!!level && level.element === element) {
-          sessionId = null; // Kill any current drag sessions
-        }
-      });
-
-      $document.on('zoomend', function (e, level) {
-
-        if(!!level && level.element === element) {
-          // TODO: better way to check for this?
-          if(Input.orderedTouches[0] !== 'mouse') {
-            _onEnd();
-          }
-        }
-
-      });
 
     }
   };

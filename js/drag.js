@@ -85,22 +85,18 @@ angular.module('modifiedNouns.drag', [])
 
       $document.on('zoomstart', function (e, _level) {
         if(!!_level && _level.element === element) {
-          // TODO: looks like zoomstart can be fired multiple times before
-          // zoomend?
-          console.log('zoomstart: ', sessionId);
           _endDrag();
         }
       });
 
       $document.on('zoomend', function (e, _level) {
         if(!!_level && _level.element === element) {
-          // Update current level reference,
-          // As this may have changed since zoom began
+          // Update level reference, as this may have changed since zoom began
           level = _level;
 
           // TODO: better way to check for this?
-          if(Input.activeTouches.length > 0 && Input.orderedTouches[0] !== 'mouse') {
-            console.log('zoomend: ', sessionId);
+          if(Input.activeTouches.length > 0 &&
+            Input.orderedTouches[0] !== 'mouse') {
 
             _startDrag(Input.activeTouches[ Input.orderedTouches[0] ]);
           }

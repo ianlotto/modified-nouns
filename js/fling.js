@@ -109,13 +109,13 @@ angular.module('modifiedNouns.fling', [])
         });
 
         element.on('dragstart', function () {
-          $document.on('dragend', onEnd);
+          $document.one('dragend', onEnd);
         });
 
         var onEnd = function (e, level) {
           lastPoint = Drag.points[ Drag.points.length - 1 ];
 
-          if(!!lastPoint) {
+          if(!!lastPoint && Input.activeTouches.length === 0) {
             idleTime = $window.Date.now() - lastPoint.time;
 
             if(decide(idleTime, Drag.points.length)) {

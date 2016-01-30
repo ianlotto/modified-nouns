@@ -154,10 +154,9 @@ angular.module('modifiedNouns.zoom', [])
               level = findLevel(pos);
             }
 
+            zooming = true;
             $document.triggerHandler('zoomstart', level);
           }
-
-          zooming = true;
 
           if(!!cancel) { $timeout.cancel(cancel); }
           cancel = $timeout(_endZoom, 200);
@@ -167,10 +166,9 @@ angular.module('modifiedNouns.zoom', [])
 
         var _endZoom = function () {
           if(zooming) {
+            zooming = false;
             $document.triggerHandler('zoomend', level);
           }
-
-          zooming = false;
         };
 
         var _onMove = function () {

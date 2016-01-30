@@ -108,6 +108,12 @@ angular.module('modifiedNouns.fling', [])
           FlingAnimation.stop();
         });
 
+        $document.on('zoomstart', function (e, level) {
+          if(!!level && level.element === element) {
+            FlingAnimation.stop();
+          }
+        });
+
         element.on('dragstart', function () {
           $document.one('dragend', onEnd);
         });

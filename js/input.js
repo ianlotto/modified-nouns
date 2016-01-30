@@ -13,6 +13,7 @@ angular.module('modifiedNouns.input', [])
   var activeTouches = { length: 0 };
   var orderedTouches = [];
   var typeExp = /(mouse|wheel)/i;
+  var recordMove = false;
 
   var delta, typeMatch, touches, _touches, touch, _touch;
 
@@ -77,15 +78,22 @@ angular.module('modifiedNouns.input', [])
   };
 
   $document.on(EVENTS.start, function (e) {
+    recordMove = true;
     updateActiveTouches(e);
   });
 
   $document.on(EVENTS.move, function (e) {
-    updateActiveTouches(e);
+    if(recordMove) {
+      updateActiveTouches(e);
+    }
   });
 
   $document.on(EVENTS.end, function (e) {
     updateActiveTouches(e, true);
+
+    if(activeTouches.length == 0) {
+      recordMove = false;
+    }
   });
 
   return {

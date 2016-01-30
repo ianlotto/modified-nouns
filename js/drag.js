@@ -94,10 +94,7 @@ angular.module('modifiedNouns.drag', [])
           // Update level reference, as this may have changed since zoom began
           level = _level;
 
-          // TODO: better way to check for this?
-          if(Input.activeTouches.length > 0 &&
-            Input.orderedTouches[0] !== 'mouse') {
-
+          if(Input.activeTouches.length > 0) {
             _startDrag(Input.activeTouches[ Input.orderedTouches[0] ]);
           }
         }

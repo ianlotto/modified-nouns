@@ -2,8 +2,34 @@
 
 angular.module('modifiedNouns.zoom', [])
 
+.factory('ZoomAnimation', function ($interval) {
+  var FREQUENCY = 10;
+  var DURATION = 200;
+  var COUNT = DURATION / FREQUENCY;
+
+  var cancel;
+
+  return {
+    start: function (zoom, zoomObj) {
+      zoom(zoomObj);
+      cancel = $interval(zoom, FREQUENCY, COUNT, false, zoomObj);
+
+      return cancel;
+    },
+    stop: function () {
+      if (angular.isDefined(cancel)) {
+        $interval.cancel(cancel);
+        cancel = undefined;
+      }
+    }
+  };
+})
+
 .factory('Zoom',
-  function ($window, $document, $timeout, Geometry, Limit, Input, ModifiedNouns) {
+  function (
+    $window, $document, $timeout,
+    Geometry, Limit, Input, ZoomAnimation, ModifiedNouns
+  ) {
 
     var maxZ = 1;
     var minZ = $window.Math.pow(2, -ModifiedNouns.levels.length);
@@ -202,8 +228,26 @@ angular.module('modifiedNouns.zoom', [])
           }
         };
 
-        // TODO: double-tap touch
+        // Double-touch
+        element.on(Input.EVENTS.start, function (e) {
+          ZoomAnimation.stop();
 
+          $timeout(function () {
+            var doubleTouch = Input.checkDoubleTouch();
+
+            if(!!doubleTouch) {
+              zoomTouch = {
+                x: doubleTouch.finishX,
+                y: doubleTouch.finishY,
+                dir: 1
+              };
+
+              ZoomAnimation.start(_startZoom, zoomTouch);
+            }
+          });
+        });
+
+        // Drag-zoom
         element.on(Input.EVENTS.move, function (e) {
           if(Input.activeTouches.length > 1 && element[0] !== e.target) {
             i++;
@@ -220,6 +264,8 @@ angular.module('modifiedNouns.zoom', [])
           zoomTouch = Input.getWheelTouch(e);
 
           if(!!zoomTouch.dir && element[0] !== e.target) {
+            ZoomAnimation.stop();
+
             _startZoom(zoomTouch);
           }
         });

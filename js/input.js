@@ -3,18 +3,18 @@
 angular.module('modifiedNouns.input', [])
 
 .factory('DoubleTouch', function ($window, Geometry) {
-  var TIME_THRESHOLD = 200;
-  var LENGTH_THRESHOLD = 20;
+  var MAX_TIME = 200;
+  var MAX_LENGTH = 20;
   var startTouches = [];
 
   var touchVector, isDoubleTouch;
 
-  var push = function (e) {
-    startTouches.push({
+  var push = function (touch) {
+    startTouches.push({ // Make a new object here
       time: $window.Date.now(),
-      type: e.type,
-      x: e.pageX,
-      y: e.pageY
+      type: touch.type,
+      x: touch.x,
+      y: touch.y
     });
 
     if(startTouches.length > 2) {
@@ -34,8 +34,8 @@ angular.module('modifiedNouns.input', [])
     }
 
     isDoubleTouch = !!touchVector &&
-      touchVector.duration < TIME_THRESHOLD &&
-      touchVector.length < LENGTH_THRESHOLD;
+      touchVector.duration <= MAX_TIME &&
+      touchVector.length <= MAX_LENGTH;
 
     return isDoubleTouch && touchVector;
   };
@@ -111,6 +111,7 @@ angular.module('modifiedNouns.input', [])
 
   var activeTouches = { length: 0 };
   var orderedTouches = [];
+  var changedIds = [];
   var typeExp = /(mouse|wheel)/i;
 
   var recordMove = false;
@@ -131,7 +132,8 @@ angular.module('modifiedNouns.input', [])
     _touch = {
       x:  input.pageX,
       y: input.pageY,
-      id: input.identifier
+      id: input.identifier,
+      type: input.type
     };
 
     if(!_touch.id) {
@@ -147,6 +149,7 @@ angular.module('modifiedNouns.input', [])
 
     if(!!e.changedTouches && e.changedTouches.length > 0) {
       for (var i = 0; i < e.changedTouches.length; i++) {
+        e.changedTouches[i].type = e.type; // add event type to Touch object
         _touches[i] = createTouch(e.changedTouches[i]);
       }
     } else {
@@ -158,10 +161,12 @@ angular.module('modifiedNouns.input', [])
 
   var updateActiveTouches = function (e, destroy) {
     touches = getTouches(e);
+    changedIds.length = 0;
 
     for (var i = 0; i < touches.length; i++) {
       touch = touches[i];
       touchIndex = orderedTouches.indexOf(touch.id);
+      changedIds.push(touch.id);
 
       if(destroy) {
         delete activeTouches[touch.id];
@@ -173,12 +178,15 @@ angular.module('modifiedNouns.input', [])
     }
 
     activeTouches.length = orderedTouches.length;
+
+    return changedIds;
   };
 
   $document.on(EVENTS.start, function (e) {
     recordMove = true;
-    DoubleTouch.push(e);
+
     updateActiveTouches(e);
+    DoubleTouch.push(activeTouches[ changedIds[0] ]);
   });
 
   $document.on(EVENTS.move, function (e) {

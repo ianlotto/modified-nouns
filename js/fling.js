@@ -88,8 +88,8 @@ angular.module('modifiedNouns.fling', [])
       return idleTime <= MAX_IDLE_TIME && numPoints >= MIN_POINTS;
     };
 
-    var create = function (level, startPoint, lasPoint) {
-      flingVector = Geometry.createVector(startPoint, lasPoint);
+    var create = function (level, startPoint, lastPoint) {
+      flingVector = Geometry.createVector(startPoint, lastPoint);
       flingLength = flingVector.length * (flingVector.duration / 50);
 
       fling.startX  = level.position.left;

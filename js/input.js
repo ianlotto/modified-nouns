@@ -129,7 +129,7 @@ angular.module('modifiedNouns.input', [])
   $document.on(EVENTS.end, function (e) {
     updateActiveTouches(e, true);
 
-    if(activeTouches.length == 0) {
+    if(activeTouches.length === 0) {
       recordMove = false;
     }
   });

@@ -132,10 +132,11 @@ angular.module('modifiedNouns.zoom', [])
     };
 
     var isZoom = function (touch1, touch2) {
-             // One touch is stationary
+      // True if one touch is stationary or
+      // One of the axes are moving in different directions
       return (touch1.dir[0] === 0 && touch1.dir[1] === 0) ||
              (touch2.dir[0] === 0 && touch2.dir[1] === 0) ||
-             // One of the axes are moving in different directions
+
              (touch1.dir[0] < 0 && touch2.dir[0] > 0) ||
              (touch1.dir[0] > 0 && touch2.dir[0] < 0) ||
              (touch1.dir[1] < 0 && touch2.dir[1] > 0) ||
@@ -229,7 +230,7 @@ angular.module('modifiedNouns.zoom', [])
         };
 
         // Double-touch
-        element.on(Input.EVENTS.start, function (e) {
+        element.on(Input.EVENTS.start, function () {
           ZoomAnimation.stop();
 
           $timeout(function () {

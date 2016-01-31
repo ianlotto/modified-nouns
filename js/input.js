@@ -46,7 +46,70 @@ angular.module('modifiedNouns.input', [])
   };
 })
 
-.factory('Input', function ($window, $document, DoubleTouch) {
+.factory('MultiTouch', function (Geometry) {
+  var touches = [];
+  var prevTouches = [];
+
+  var touchVecs = [];
+  var multiTouchVecs = [];
+
+  var isZoom = function (touch1, touch2) {
+    if(!touch1 || !touch2) {
+      return false;
+    }
+
+    if(
+      // One touch is stationary
+      (touch1.dir[0] === 0 && touch1.dir[1] === 0) ||
+      (touch2.dir[0] === 0 && touch2.dir[1] === 0) ||
+      // One of the axes are moving in different directions
+      (touch1.dir[0] < 0 && touch2.dir[0] > 0) ||
+      (touch1.dir[0] > 0 && touch2.dir[0] < 0) ||
+      (touch1.dir[1] < 0 && touch2.dir[1] > 0) ||
+      (touch1.dir[1] > 0 && touch2.dir[1] < 0)
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  var createVectors = function (touch1, touch2) {
+    prevTouches[0] = touches[0];
+    prevTouches[1] = touches[1];
+
+    touches[0] = touch1;
+    touches[1] = touch2;
+
+    multiTouchVecs[0] = multiTouchVecs[1];
+    multiTouchVecs[1] = Geometry.createVector(touches[0], touches[1]);
+
+    if(!!prevTouches[0] && !!prevTouches[1]) { // Skips the first call
+      touchVecs[0] = Geometry.createVector(prevTouches[0], touches[0]);
+      touchVecs[1] = Geometry.createVector(prevTouches[1], touches[1]);
+    }
+  };
+
+  var createZoomTouch = function () {
+    return {
+      x: multiTouchVecs[1].startX + multiTouchVecs[1].x / 2,
+      y: multiTouchVecs[1].startY + multiTouchVecs[1].y / 2,
+      dir: multiTouchVecs[1].length > multiTouchVecs[0].length ? 1 : -1
+    };
+  };
+
+  var check = function (touch1, touch2) {
+    createVectors(touch1, touch2);
+
+    return isZoom(touchVecs[0], touchVecs[1]) && createZoomTouch();
+  };
+
+  return {
+    check: check
+  };
+})
+
+.factory('Input', function ($window, $document, DoubleTouch, MultiTouch) {
 
   var EVENTS = {
     start: 'mousedown touchstart',
@@ -144,6 +207,13 @@ angular.module('modifiedNouns.input', [])
     EVENTS: EVENTS,
 
     checkDoubleTouch: DoubleTouch.check,
+
+    checkZoomTouch: function () {
+      return MultiTouch.check(
+        activeTouches[ orderedTouches[0] ],
+        activeTouches[ orderedTouches[1] ]
+      );
+    },
 
     activeTouches: activeTouches,
     orderedTouches: orderedTouches,

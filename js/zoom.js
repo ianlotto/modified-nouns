@@ -133,19 +133,6 @@ angular.module('modifiedNouns.zoom', [])
       return scaledRanges[i];
     };
 
-    var isZoom = function (touch1, touch2) {
-      // True if one touch is stationary or
-      // One of the axes are moving in different directions
-      return (touch1.dir[0] === 0 && touch1.dir[1] === 0) ||
-             (touch2.dir[0] === 0 && touch2.dir[1] === 0) ||
-
-             (touch1.dir[0] < 0 && touch2.dir[0] > 0) ||
-             (touch1.dir[0] > 0 && touch2.dir[0] < 0) ||
-             (touch1.dir[1] < 0 && touch2.dir[1] > 0) ||
-             (touch1.dir[1] > 0 && touch2.dir[1] < 0) ||
-             false;
-    };
-
     var zoom = function (zoomTouch) {
       pos.z += zoomTouch.dir * curIncrement;
       pos = constrainScale(pos, Limit.check(pos));
@@ -167,14 +154,7 @@ angular.module('modifiedNouns.zoom', [])
 
       bind: function (element) {
         var zooming = false;
-
         var i = 0;
-
-        var touches = [];
-        var prevTouches = [];
-        var touchVecs = [];
-
-        var zoomVector, prevZoomVector;
 
         var _startZoom = function (zoomObj) {
           if(!zooming) {
@@ -197,37 +177,6 @@ angular.module('modifiedNouns.zoom', [])
           if(zooming) {
             zooming = false;
             $document.triggerHandler('zoomend', level);
-          }
-        };
-
-        var _onMove = function () {
-          prevTouches[0] = touches[0];
-          prevTouches[1] = touches[1];
-
-          touches[0] = Input.activeTouches[ Input.orderedTouches[0] ];
-          touches[1] = Input.activeTouches[ Input.orderedTouches[1] ];
-
-          prevZoomVector = zoomVector;
-          zoomVector = Geometry.createVector(touches[0], touches[1]);
-
-          if(!prevTouches[0] || !prevTouches[1]) {
-            return;
-          }
-
-          touchVecs[0] = Geometry.createVector(prevTouches[0], touches[0]);
-          touchVecs[1] = Geometry.createVector(prevTouches[1], touches[1]);
-
-          if(isZoom(touchVecs[0], touchVecs[1])) {
-
-            zoomTouch = {
-              x: zoomVector.startX + zoomVector.x / 2,
-              y: zoomVector.startY + zoomVector.y / 2,
-              dir: zoomVector.length > prevZoomVector.length ? 1 : -1
-            };
-
-            _startZoom(zoomTouch);
-          } else {
-            _endZoom();
           }
         };
 
@@ -258,7 +207,13 @@ angular.module('modifiedNouns.zoom', [])
             i++;
 
             if(i % 2 === 0) { // Throttle for better data
-              _onMove();
+              zoomTouch = Input.checkZoomTouch();
+
+              if(!!zoomTouch) {
+                _startZoom(zoomTouch);
+              } else {
+                _endZoom();
+              }
             }
           }
         });

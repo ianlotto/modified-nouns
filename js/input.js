@@ -90,18 +90,10 @@ angular.module('modifiedNouns.input', [])
     }
   };
 
-  var createZoomTouch = function () {
-    return {
-      x: multiTouchVecs[1].startX + multiTouchVecs[1].x / 2,
-      y: multiTouchVecs[1].startY + multiTouchVecs[1].y / 2,
-      dir: multiTouchVecs[1].length > multiTouchVecs[0].length ? 1 : -1
-    };
-  };
-
   var check = function (touch1, touch2) {
     createVectors(touch1, touch2);
 
-    return isZoom(touchVecs[0], touchVecs[1]) && createZoomTouch();
+    return isZoom(touchVecs[0], touchVecs[1]) && multiTouchVecs;
   };
 
   return {

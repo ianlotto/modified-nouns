@@ -25,8 +25,6 @@ angular.module('modifiedNouns.zoom', [])
   };
 })
 
-// TODO: Break down into 2 or 3 factories
-
 .factory('Zoom',
   function (
     $window, $document, $timeout,
@@ -55,7 +53,7 @@ angular.module('modifiedNouns.zoom', [])
     var size = {};
     var offset = {};
 
-    var zoomTouch, prevLevel, level, position, cancel;
+    var prevLevel, level, position, cancel;
 
     var getScaledSize = function (size, z) {
       size.width = ModifiedNouns.FULL_SIZE.width * z / maxZ;
@@ -156,29 +154,7 @@ angular.module('modifiedNouns.zoom', [])
         var zooming = false;
         var i = 0;
 
-        var _startZoom = function (zoomObj) {
-          if(!zooming) {
-
-            if(!level) {
-              level = findLevel(pos);
-            }
-
-            zooming = true;
-            $document.triggerHandler('zoomstart', level);
-          }
-
-          if(!!cancel) { $timeout.cancel(cancel); }
-          cancel = $timeout(_endZoom, 200);
-
-          zoom(zoomObj);
-        };
-
-        var _endZoom = function () {
-          if(zooming) {
-            zooming = false;
-            $document.triggerHandler('zoomend', level);
-          }
-        };
+        var touchVecs, zoomTouch;
 
         // Double-touch
         element.on(Input.EVENTS.start, function (e) {
@@ -207,7 +183,13 @@ angular.module('modifiedNouns.zoom', [])
             i++;
 
             if(i % 2 === 0) { // Throttle for better data
-              zoomTouch = Input.checkZoomTouch();
+              touchVecs = Input.checkZoomTouch();
+
+              zoomTouch = {
+                x: touchVecs[1].startX + touchVecs[1].x / 2,
+                y: touchVecs[1].startY + touchVecs[1].y / 2,
+                dir: touchVecs[1].length > touchVecs[0].length ? 1 : -1
+              }
 
               if(!!zoomTouch) {
                 _startZoom(zoomTouch);
@@ -229,6 +211,31 @@ angular.module('modifiedNouns.zoom', [])
             _startZoom(zoomTouch);
           }
         });
+
+        var _startZoom = function (zoomTouch) {
+          if(!zooming) {
+
+            if(!level) {
+              level = findLevel(pos);
+            }
+
+            zooming = true;
+            $document.triggerHandler('zoomstart', level);
+          }
+
+          if(!!cancel) { $timeout.cancel(cancel); }
+          cancel = $timeout(_endZoom, 200);
+
+          zoom(zoomTouch);
+        };
+
+        var _endZoom = function () {
+          if(zooming) {
+            zooming = false;
+            $document.triggerHandler('zoomend', level);
+          }
+        };
+
       }
     };
 

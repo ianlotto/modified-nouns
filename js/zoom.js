@@ -185,13 +185,13 @@ angular.module('modifiedNouns.zoom', [])
             if(i % 2 === 0) { // Throttle for better data
               touchVecs = Input.checkZoomTouch();
 
-              zoomTouch = {
-                x: touchVecs[1].startX + touchVecs[1].x / 2,
-                y: touchVecs[1].startY + touchVecs[1].y / 2,
-                dir: touchVecs[1].length > touchVecs[0].length ? 1 : -1
-              }
+              if(!!touchVecs) {
+                zoomTouch = {
+                  x: touchVecs[1].startX + touchVecs[1].x / 2,
+                  y: touchVecs[1].startY + touchVecs[1].y / 2,
+                  dir: touchVecs[1].length > touchVecs[0].length ? 1 : -1
+                };
 
-              if(!!zoomTouch) {
                 _startZoom(zoomTouch);
               } else {
                 _endZoom();

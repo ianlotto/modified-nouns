@@ -2,7 +2,7 @@
 
 angular.module('modifiedNouns.input', [])
 
-.factory('Input', function ($window, $document) {
+.factory('Input', function ($window, $document, Geometry) {
 
   var EVENTS = {
     start: 'mousedown touchstart',
@@ -10,12 +10,51 @@ angular.module('modifiedNouns.input', [])
     end: 'mouseup touchend touchcancel'
   };
 
+  var DOUBLE_TOUCH_TIME_THRESHOLD = 200;
+  var DOUBLE_TOUCH_LENGTH_THRESHOLD = 20;
+  var startTouches = [];
+
   var activeTouches = { length: 0 };
   var orderedTouches = [];
   var typeExp = /(mouse|wheel)/i;
+
   var recordMove = false;
 
-  var delta, typeMatch, touches, _touches, touch, _touch;
+  var delta, typeMatch, touches, touchIndex, _touches, touch, _touch;
+  var touchVector, isDoubleTouch;
+
+  var pushStartTouch = function (e) {
+    _touch = createTouch(e);
+
+    startTouches.push({
+      time: $window.Date.now(),
+      type: e.type,
+      x: _touch.x,
+      y: _touch.y
+    });
+
+    if(startTouches.length > 2) {
+      startTouches.shift();
+    }
+  };
+
+  var checkDoubleTouch = function () {
+    if(startTouches.length !== 2) {
+      return false;
+    }
+
+    if(startTouches[1].type === startTouches[0].type) {
+      touchVector = Geometry.createVector(startTouches[0], startTouches[1]);
+    } else {
+      touchVector = false;
+    }
+
+    isDoubleTouch = !!touchVector &&
+      touchVector.duration < DOUBLE_TOUCH_TIME_THRESHOLD &&
+      touchVector.length < DOUBLE_TOUCH_LENGTH_THRESHOLD;
+
+    return isDoubleTouch && touchVector;
+  };
 
   var getWheelTouch = function (e) {
     delta = e.deltaY * -1;
@@ -56,8 +95,6 @@ angular.module('modifiedNouns.input', [])
     return _touches;
   };
 
-  var touchIndex;
-
   var updateActiveTouches = function (e, destroy) {
     touches = getTouches(e);
 
@@ -79,6 +116,7 @@ angular.module('modifiedNouns.input', [])
 
   $document.on(EVENTS.start, function (e) {
     recordMove = true;
+    pushStartTouch(e);
     updateActiveTouches(e);
   });
 
@@ -101,6 +139,7 @@ angular.module('modifiedNouns.input', [])
     activeTouches: activeTouches,
     orderedTouches: orderedTouches,
     getTouches: getTouches,
-    getWheelTouch: getWheelTouch
+    getWheelTouch: getWheelTouch,
+    checkDoubleTouch: checkDoubleTouch
   };
 });

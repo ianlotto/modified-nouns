@@ -25,6 +25,8 @@ angular.module('modifiedNouns.zoom', [])
   };
 })
 
+// TODO: Break down into 2 or 3 factories
+
 .factory('Zoom',
   function (
     $window, $document, $timeout,
@@ -230,22 +232,24 @@ angular.module('modifiedNouns.zoom', [])
         };
 
         // Double-touch
-        element.on(Input.EVENTS.start, function () {
-          ZoomAnimation.stop();
+        element.on(Input.EVENTS.start, function (e) {
+          if(element[0] !== e.target) {
+            ZoomAnimation.stop();
 
-          $timeout(function () {
-            var doubleTouch = Input.checkDoubleTouch();
+            $timeout(function () {
+              var doubleTouch = Input.checkDoubleTouch();
 
-            if(!!doubleTouch) {
-              zoomTouch = {
-                x: doubleTouch.finishX,
-                y: doubleTouch.finishY,
-                dir: 1
-              };
+              if(!!doubleTouch) {
+                zoomTouch = {
+                  x: doubleTouch.finishX,
+                  y: doubleTouch.finishY,
+                  dir: 1
+                };
 
-              ZoomAnimation.start(_startZoom, zoomTouch);
-            }
-          });
+                ZoomAnimation.start(_startZoom, zoomTouch);
+              }
+            });
+          }
         });
 
         // Drag-zoom

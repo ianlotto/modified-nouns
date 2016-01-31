@@ -2,35 +2,19 @@
 
 angular.module('modifiedNouns.input', [])
 
-.factory('Input', function ($window, $document, Geometry) {
-
-  var EVENTS = {
-    start: 'mousedown touchstart',
-    move: 'mousemove touchmove',
-    end: 'mouseup touchend touchcancel'
-  };
-
-  var DOUBLE_TOUCH_TIME_THRESHOLD = 200;
-  var DOUBLE_TOUCH_LENGTH_THRESHOLD = 20;
+.factory('DoubleTouch', function ($window, Geometry) {
+  var TIME_THRESHOLD = 200;
+  var LENGTH_THRESHOLD = 20;
   var startTouches = [];
 
-  var activeTouches = { length: 0 };
-  var orderedTouches = [];
-  var typeExp = /(mouse|wheel)/i;
-
-  var recordMove = false;
-
-  var delta, typeMatch, touches, touchIndex, _touches, touch, _touch;
   var touchVector, isDoubleTouch;
 
-  var pushStartTouch = function (e) {
-    _touch = createTouch(e);
-
+  var push = function (e) {
     startTouches.push({
       time: $window.Date.now(),
       type: e.type,
-      x: _touch.x,
-      y: _touch.y
+      x: e.pageX,
+      y: e.pageY
     });
 
     if(startTouches.length > 2) {
@@ -38,7 +22,7 @@ angular.module('modifiedNouns.input', [])
     }
   };
 
-  var checkDoubleTouch = function () {
+  var check = function () {
     if(startTouches.length !== 2) {
       return false;
     }
@@ -50,11 +34,33 @@ angular.module('modifiedNouns.input', [])
     }
 
     isDoubleTouch = !!touchVector &&
-      touchVector.duration < DOUBLE_TOUCH_TIME_THRESHOLD &&
-      touchVector.length < DOUBLE_TOUCH_LENGTH_THRESHOLD;
+      touchVector.duration < TIME_THRESHOLD &&
+      touchVector.length < LENGTH_THRESHOLD;
 
     return isDoubleTouch && touchVector;
   };
+
+  return {
+    push: push,
+    check: check
+  };
+})
+
+.factory('Input', function ($window, $document, DoubleTouch) {
+
+  var EVENTS = {
+    start: 'mousedown touchstart',
+    move: 'mousemove touchmove',
+    end: 'mouseup touchend touchcancel'
+  };
+
+  var activeTouches = { length: 0 };
+  var orderedTouches = [];
+  var typeExp = /(mouse|wheel)/i;
+
+  var recordMove = false;
+
+  var delta, typeMatch, touches, touchIndex, _touches, touch, _touch;
 
   var getWheelTouch = function (e) {
     delta = e.deltaY * -1;
@@ -116,7 +122,7 @@ angular.module('modifiedNouns.input', [])
 
   $document.on(EVENTS.start, function (e) {
     recordMove = true;
-    pushStartTouch(e);
+    DoubleTouch.push(e);
     updateActiveTouches(e);
   });
 
@@ -136,10 +142,12 @@ angular.module('modifiedNouns.input', [])
 
   return {
     EVENTS: EVENTS,
+
+    checkDoubleTouch: DoubleTouch.check,
+
     activeTouches: activeTouches,
     orderedTouches: orderedTouches,
     getTouches: getTouches,
-    getWheelTouch: getWheelTouch,
-    checkDoubleTouch: checkDoubleTouch
+    getWheelTouch: getWheelTouch
   };
 });

@@ -149,7 +149,7 @@ angular.module('modifiedNouns.input', [])
 
     if(!!e.changedTouches && e.changedTouches.length > 0) {
       for (var i = 0; i < e.changedTouches.length; i++) {
-        e.changedTouches[i].type = e.type; // add event type to Touch object
+        e.changedTouches[i].type = e.type; // Add event type to Touch object
         _touches[i] = createTouch(e.changedTouches[i]);
       }
     } else {

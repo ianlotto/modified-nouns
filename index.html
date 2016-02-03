@@ -21,7 +21,11 @@
       <div ng-style="{ width: percentComplete }"></div>
     </div>
 
-    <div modified-nouns zoom ng-class="{ 'top-level': hasTopLevel }">
+    <div
+      modified-nouns
+      watch-resize
+      zoom
+      ng-class="{ 'top-level': hasTopLevel }">
 
       <div
         level="{{ key }}"

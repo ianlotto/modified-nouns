@@ -30,7 +30,7 @@ angular.module('modifiedNouns', [
 
   var levels = new $window.Array(ASSET_DATA.img.levels);
 
-  var level, levelData, centerX, centerY;
+  var level, curLevel, levelData, centerX, centerY;
 
   var positionLevels = function (centerX, centerY) {
     for (var i = 0; i < levels.length; i++) {
@@ -51,7 +51,11 @@ angular.module('modifiedNouns', [
     levels: levels,
 
     init: function () {
-      this.positionLevel(levels[0], 0, 0);
+      this.positionLevel(curLevel = levels[0], 0, 0);
+    },
+
+    getCurLevel: function () {
+      return curLevel;
     },
 
     hideLevel: function (level) {
@@ -59,6 +63,8 @@ angular.module('modifiedNouns', [
     },
 
     positionLevel: function (level, left, top) {
+      curLevel = level; // positioning the level makes it current
+
       centerX = left + level.size.width / 2;
       centerY = top + level.size.height / 2;
 

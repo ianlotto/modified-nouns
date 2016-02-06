@@ -23,18 +23,6 @@ angular.module('modifiedNouns.drag', [])
     vectors.length = 0;
   };
 
-  var constrainPos = function (pos, checkResult) {
-    pos.x = checkResult.x === -1 ?
-      checkResult.limits.minX : checkResult.x === 1 ?
-      checkResult.limits.maxX : pos.x;
-
-    pos.y = checkResult.y === -1 ?
-      checkResult.limits.minY : checkResult.y === 1 ?
-      checkResult.limits.maxY : pos.y;
-
-    return pos;
-  };
-
   var onStart = function (level, eventPos) {
     clearData();
 
@@ -57,7 +45,7 @@ angular.module('modifiedNouns.drag', [])
     pos.x = pos.x + vector.x;
     pos.y = pos.y + vector.y;
 
-    pos = constrainPos(pos, Limit.check(pos));
+    pos = Limit.constrainPos(pos);
 
     ModifiedNouns.positionLevel(level, pos.x, pos.y);
   };

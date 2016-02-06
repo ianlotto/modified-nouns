@@ -63,7 +63,7 @@ angular.module('modifiedNouns', [
     },
 
     positionLevel: function (level, left, top) {
-      curLevel = level; // positioning the level makes it current
+      curLevel = level; // Positioning the level makes it current
 
       centerX = left + level.size.width / 2;
       centerY = top + level.size.height / 2;

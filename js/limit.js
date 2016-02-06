@@ -2,12 +2,12 @@
 
 angular.module('modifiedNouns.limit', [])
 
-.factory('Limit', function (ModifiedNouns) {
+.factory('Limit', function () {
   var orderedLimits = [];
   var limits = {};
   var limitCheck = { limits: limits };
 
-  var widerParent, tallerParent, curLevel;
+  var widerParent, tallerParent;
 
   return {
     setXY: function (startData, parentData) {
@@ -40,53 +40,44 @@ angular.module('modifiedNouns.limit', [])
       return limitCheck;
     },
 
-    onResize: function (parentData) {
-      curLevel = ModifiedNouns.getCurLevel();
+    constrainPos: function (pos) {
+      this.check(pos);
 
-      var diffX = parentData.width - (curLevel.position.left + curLevel.size.width);
+      pos.x = limitCheck.x === -1 ?
+        limitCheck.limits.minX : limitCheck.x === 1 ?
+        limitCheck.limits.maxX : pos.x;
 
-      // TODO: quick resizes don't work.
+      pos.y = limitCheck.y === -1 ?
+        limitCheck.limits.minY : limitCheck.y === 1 ?
+        limitCheck.limits.maxY : pos.y;
 
-      if(curLevel.size.width < parentData.width) {
-
-        // - when level is smaller than window and window is being shrunk, first take away from right / bottom, then take away from left / top.
-        if(diffX < 0) {
-
-          ModifiedNouns.positionLevel(
-            curLevel,
-            Math.floor(parentData.width - curLevel.size.width),
-            curLevel.position.top
-          );
-
-        }
-
-      } else {
-        // - when level is larger than window in a dim and window is being enlarged the level should be anchored to enlarged side, if need be.
-
-        if(diffX > 0) {
-
-          ModifiedNouns.positionLevel(
-            curLevel,
-            curLevel.position.left + diffX,
-            curLevel.position.top
-          );
-
-        }
-
-      }
-
+      return pos;
     }
 
   };
 
 })
 
-.directive('watchResize', function ($window, Limit) {
+.directive('constrainResize', function ($window, Limit, ModifiedNouns) {
   return {
     restrict: 'A',
     link: function (scope, element) {
-      angular.element($window).on('resize', function (e) {
-        Limit.onResize(element[0].getBoundingClientRect());
+      var pos = {};
+
+      var parentData, curLevel;
+
+      angular.element($window).on('resize', function () {
+        parentData = element[0].getBoundingClientRect();
+        curLevel = ModifiedNouns.getCurLevel();
+
+        Limit.setXY(curLevel.size, parentData);
+
+        pos.x = curLevel.position.left;
+        pos.y = curLevel.position.top;
+
+        pos = Limit.constrainPos(pos);
+
+        ModifiedNouns.positionLevel(curLevel, pos.x, pos.y);
       });
     }
   };

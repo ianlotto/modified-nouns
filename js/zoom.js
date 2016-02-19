@@ -11,7 +11,6 @@ angular.module('modifiedNouns.zoom', [])
 
   return {
     start: function (zoom, zoomObj) {
-      zoom(zoomObj);
       cancel = $interval(zoom, FREQUENCY, COUNT, false, zoomObj);
 
       return cancel;

@@ -11,7 +11,7 @@ angular.module('modifiedNouns.fling', [])
 
   var pos = {};
 
-  var i, difference, easeFactor, cancel;
+  var i, difference, easeFactor, cancel, curLimit;
 
   var easeOut = function (curTime, duration, power) {
     return 1 - $window.Math.pow(1 - (curTime / duration), power);
@@ -22,17 +22,26 @@ angular.module('modifiedNouns.fling', [])
     return limit - difference * BOUNCE_DAMPER;
   };
 
-  var bouncePos = function (pos, checkResult) {
-    if(checkResult.x === 1) {
-      pos.x = calcBounce(pos.x, checkResult.limits.maxX);
-    } else if(checkResult.x === -1) {
-      pos.x = calcBounce(pos.x, checkResult.limits.minX);
+  var bouncePos = function (pos, data, checkResult) {
+
+    if(checkResult.x !== 0) {
+      curLimit = checkResult.x === 1 ? 'maxX' : 'minX';
+
+      data.finishX = calcBounce(data.finishX, checkResult.limits[curLimit]);
+      pos.x = data.startX = checkResult.limits[curLimit];
+      data.startY = pos.y;
+
+      i = 0;
     }
 
-    if(checkResult.y === 1) {
-      pos.y = calcBounce(pos.y, checkResult.limits.maxY);
-    } else if(checkResult.y === -1) {
-      pos.y = calcBounce(pos.y, checkResult.limits.minY);
+    if(checkResult.y !== 0) {
+      curLimit = checkResult.y === 1 ? 'maxY' : 'minY';
+
+      data.finishY = calcBounce(data.finishY, checkResult.limits[curLimit]);
+      pos.y = data.startY = checkResult.limits[curLimit];
+      data.startX = pos.x;
+
+      i = 0;
     }
 
     return pos;
@@ -46,7 +55,7 @@ angular.module('modifiedNouns.fling', [])
     pos.x = data.startX + (data.finishX - data.startX) * easeFactor;
     pos.y = data.startY + (data.finishY - data.startY) * easeFactor;
 
-    pos = bouncePos(pos, Limit.check(pos));
+    pos = bouncePos(pos, data, Limit.check(pos));
 
     ModifiedNouns.positionLevel(level, pos.x, pos.y);
   };

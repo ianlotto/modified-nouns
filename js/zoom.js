@@ -130,7 +130,7 @@ angular.module('modifiedNouns.zoom', [])
       return scaledRanges[i];
     };
 
-    var zoom = function (zoomTouch) {
+    var zoom = function (zoomTouch, parentData) {
       pos.z += zoomTouch.dir * curIncrement;
       pos = constrainScale(pos, Limit.check(pos));
 
@@ -139,6 +139,9 @@ angular.module('modifiedNouns.zoom', [])
 
       size = getScaledSize(size, pos.z);
       position = getScaledPosition(level, size, zoomTouch);
+
+      Limit.setXY(size, parentData);
+      position = Limit.constrainPos(position);
 
       ModifiedNouns.scaleLevel(level, size, position);
 
@@ -153,7 +156,7 @@ angular.module('modifiedNouns.zoom', [])
         var zooming = false;
         var i = 0;
 
-        var touchVecs, zoomTouch;
+        var touchVecs, zoomTouch, parentData;
 
         // Double-touch
         element.on(Input.EVENTS.start, function (e) {
@@ -218,6 +221,8 @@ angular.module('modifiedNouns.zoom', [])
               level = findLevel(pos);
             }
 
+            parentData = element[0].getBoundingClientRect();
+
             zooming = true;
             $document.triggerHandler('zoomstart', level);
           }
@@ -225,7 +230,7 @@ angular.module('modifiedNouns.zoom', [])
           if(!!cancel) { $timeout.cancel(cancel); }
           cancel = $timeout(_endZoom, 200);
 
-          zoom(zoomTouch);
+          zoom(zoomTouch, parentData);
         };
 
         var _endZoom = function () {

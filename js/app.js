@@ -8,7 +8,8 @@ angular.module('modifiedNouns', [
   'modifiedNouns.fling',
   'modifiedNouns.zoom',
   'modifiedNouns.fullscreen',
-  'modifiedNouns.loader'
+  'modifiedNouns.loader',
+  'modifiedNouns.search'
 ])
 
 .constant('ASSET_DATA', {
@@ -21,7 +22,7 @@ angular.module('modifiedNouns', [
   }
 })
 
-.factory('ModifiedNouns', function ($window, ASSET_DATA) {
+.factory('ModifiedNouns', function ($window, ASSET_DATA, Loader) {
 
   var FULL_SIZE = {
     width: 4500,
@@ -49,6 +50,17 @@ angular.module('modifiedNouns', [
   return {
     FULL_SIZE: FULL_SIZE,
     levels: levels,
+    data: null,
+
+    load: function () {
+      var modifiedNouns = this;
+
+      Loader.getImages();
+
+      Loader.getModifiedNouns().then(function (data) {
+        modifiedNouns.data = data;
+      });
+    },
 
     init: function () {
       this.positionLevel(curLevel = levels[0], 0, 0);
@@ -188,11 +200,10 @@ angular.module('modifiedNouns', [
   };
 })
 
-.run(function ($window, Loader) {
+.run(function ($window, ModifiedNouns) {
   angular.element($window).on('touchmove', function (e) {
     e.preventDefault(); // Prevent window scrolling / bouncing
   });
 
-  Loader.getModifiedNouns();
-  Loader.getImages();
+  ModifiedNouns.load();
 });

@@ -51,6 +51,13 @@ button {
   background-color: rgba(255,255,255,.7);
 }
 
+[search] {
+  display: block;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
 [toggle-fullscreen] {
   display: block;
   position: absolute;

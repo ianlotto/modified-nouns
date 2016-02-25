@@ -11,7 +11,7 @@ angular.module('modifiedNouns.fling', [])
 
   var pos = {};
 
-  var i, difference, easeFactor, cancel, curLimit;
+  var i, difference, easeFactor, cancel, curLimit, checkResult;
 
   var easeOut = function (curTime, duration, power) {
     return 1 - $window.Math.pow(1 - (curTime / duration), power);
@@ -22,7 +22,8 @@ angular.module('modifiedNouns.fling', [])
     return limit - difference * BOUNCE_DAMPER;
   };
 
-  var bouncePos = function (pos, data, checkResult) {
+  var bouncePos = function (pos, data) {
+    checkResult = Limit.check(pos);
 
     if(checkResult.x !== 0) {
       curLimit = checkResult.x === 1 ? 'maxX' : 'minX';
@@ -47,7 +48,7 @@ angular.module('modifiedNouns.fling', [])
     return pos;
   };
 
-  var increment = function (data, level) {
+  var increment = function (data, level, limit) {
     i++;
 
     easeFactor = easeOut(i * FREQUENCY, DURATION, 3);
@@ -55,16 +56,18 @@ angular.module('modifiedNouns.fling', [])
     pos.x = data.startX + (data.finishX - data.startX) * easeFactor;
     pos.y = data.startY + (data.finishY - data.startY) * easeFactor;
 
-    pos = bouncePos(pos, data, Limit.check(pos));
+    pos = limit(pos, data);
 
     ModifiedNouns.positionLevel(level, pos.x, pos.y);
   };
 
-  var start = function (data, level) {
+  var start = function (data, level, limit) {
     i = 0;
 
-    increment(data, level);
-    cancel = $interval(increment, FREQUENCY, COUNT, false, data, level);
+    limit = limit === 'constrain' ? Limit.constrainPos.bind(Limit) : bouncePos;
+
+    increment(data, level, limit);
+    cancel = $interval(increment, FREQUENCY, COUNT, false, data, level, limit);
 
     return cancel;
   };

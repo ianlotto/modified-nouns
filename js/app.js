@@ -14,6 +14,14 @@ angular.module('modifiedNouns', [
 
 .constant('ASSET_DATA', {
   mnSrc: 'data/modified_nouns.json',
+  dimensions: {
+  	marginTop: 248,
+  	marginLeft: 95,
+  	tileHeight: 150,
+  	tileWidth: 150,
+  	paddingHeight: 56.5,
+  	paddingWidth: 56
+  },
   img: {
     template: 'data/{0}/{1}.jpg',
     regExp: /\{(\d)\}/g,

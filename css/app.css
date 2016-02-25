@@ -58,6 +58,10 @@ button {
   left: 20px;
 }
 
+[search] ul {
+  background-color: #fff;
+}
+
 [toggle-fullscreen] {
   display: block;
   position: absolute;

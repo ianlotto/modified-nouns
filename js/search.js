@@ -28,11 +28,15 @@ angular.module('modifiedNouns.search', [])
   };
 })
 
-.directive('search', function (ModifiedNouns, FlingAnimation, Search) {
+// TODO: cleanup goTo method
+
+.directive('search', function (ASSET_DATA, ModifiedNouns, FlingAnimation, Search) {
   return {
     restrict: 'A',
     link: function (scope) {
-      var curLevel;
+      var curLevel, curScale, $parent, parentData;
+
+      var dimensions = ASSET_DATA.dimensions;
 
       scope.modifiedNouns = ModifiedNouns;
       scope.input = null;
@@ -42,19 +46,37 @@ angular.module('modifiedNouns.search', [])
       };
 
       scope.goTo = function (match) {
-        console.log(match);
         curLevel = ModifiedNouns.getCurLevel();
+        curScale = curLevel.size.width / ModifiedNouns.FULL_SIZE.width;
+
+        $parent = curLevel.element.parent();
+
+        parentData = $parent[0].getBoundingClientRect();
+
+        var unitWidth = dimensions.tileWidth + dimensions.paddingWidth;
+        var centerX = parentData.width / 2 - (dimensions.tileWidth * curScale / 2);
+
+        var posX = match.column * unitWidth + dimensions.marginLeft;
+
+        posX *= -curScale;
+        posX += centerX;
+
+        var unitHeight = dimensions.tileHeight + dimensions.paddingHeight;
+        var centerY = parentData.height / 2 - (dimensions.tileHeight * curScale / 2);
+
+        var posY = match.row * unitHeight + dimensions.marginTop;
+
+        posY *= -curScale;
+        posY += centerY;
 
         FlingAnimation.start({
           startX: curLevel.position.left,
-          finishX: match.column * -200,
+          finishX: posX,
           startY: curLevel.position.top,
-          finishY: match.row * -200
-        }, curLevel);
+          finishY: posY
+        }, curLevel, 'constrain');
       };
 
-      scope.$watch('modifiedNouns.data', function (data) {
-      });
     }
   };
 });

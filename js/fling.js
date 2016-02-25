@@ -62,6 +62,8 @@ angular.module('modifiedNouns.fling', [])
   };
 
   var start = function (data, level, limit) {
+    stop();
+
     i = 0;
 
     limit = limit === 'constrain' ? Limit.constrainPos.bind(Limit) : bouncePos;

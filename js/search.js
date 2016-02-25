@@ -16,7 +16,8 @@ angular.module('modifiedNouns.search', [])
 
         if(
           searchExp.test(modifiedNoun.noun) ||
-          searchExp.test(modifiedNoun.modifier)
+          searchExp.test(modifiedNoun.modifier) ||
+          searchExp.test([modifiedNoun.modifier, modifiedNoun.noun].join(' '))
         ) {
 
           matches.push(ModifiedNouns.data[i]);
@@ -28,55 +29,90 @@ angular.module('modifiedNouns.search', [])
   };
 })
 
-// TODO: cleanup goTo method
+// TODO: constrain MN initially
+// TODO: style search
+// TODO: cleanup directive
 
-.directive('search', function (ASSET_DATA, ModifiedNouns, FlingAnimation, Search) {
-  return {
-    restrict: 'A',
-    link: function (scope) {
-      var curLevel, curScale, $parent, parentData;
+.directive('search',
+  function (
+    $window, $timeout,
+    ASSET_DATA, ModifiedNouns, FlingAnimation, Search
+  ) {
+    return {
+      restrict: 'A',
+      scope: true,
+      link: function (scope, element) {
+        var dimensions = ASSET_DATA.dimensions;
+        var matchesEl = $window.document.getElementById('matches');
 
-      var dimensions = ASSET_DATA.dimensions;
+        var $$window = angular.element($window);
 
-      scope.modifiedNouns = ModifiedNouns;
-      scope.input = null;
+        var curLevel, curScale, $parent, parentData;
 
-      scope.search = function () {
-        scope.matches = !!scope.input ? Search.search(scope.input) : [];
-      };
+        var hideMatches = function (e) {
+          if(e.target !== matchesEl) {
+            $$window.off('click', hideMatches);
 
-      scope.goTo = function (match) {
-        curLevel = ModifiedNouns.getCurLevel();
-        curScale = curLevel.size.width / ModifiedNouns.FULL_SIZE.width;
+            scope.setMatchesDisplay(false);
+          }
+        };
 
-        $parent = curLevel.element.parent();
+        scope.modifiedNouns = ModifiedNouns;
+        scope.input = null;
 
-        parentData = $parent[0].getBoundingClientRect();
+        scope.setMatchesDisplay = function (show) {
+          scope.showMatches = angular.isDefined(show) ?
+            !!show : !scope.showMatches;
+        };
 
-        var unitWidth = dimensions.tileWidth + dimensions.paddingWidth;
-        var centerX = parentData.width / 2 - (dimensions.tileWidth * curScale / 2);
+        scope.$watch('showMatches', function (n) {
+          if(!!n) {
+            $$window.on('mousedown', hideMatches);
+          }
+        });
 
-        var posX = match.column * unitWidth + dimensions.marginLeft;
+        scope.search = function () {
+          scope.matches = !!scope.input ? Search.search(scope.input) : [];
+          scope.setMatchesDisplay(scope.matches.length > 0);
+        };
 
-        posX *= -curScale;
-        posX += centerX;
+        scope.goTo = function (match) {
+          FlingAnimation.stop();
 
-        var unitHeight = dimensions.tileHeight + dimensions.paddingHeight;
-        var centerY = parentData.height / 2 - (dimensions.tileHeight * curScale / 2);
+          curLevel = ModifiedNouns.getCurLevel();
+          curScale = curLevel.size.width / ModifiedNouns.FULL_SIZE.width;
 
-        var posY = match.row * unitHeight + dimensions.marginTop;
+          $parent = curLevel.element.parent();
 
-        posY *= -curScale;
-        posY += centerY;
+          parentData = $parent[0].getBoundingClientRect();
 
-        FlingAnimation.start({
-          startX: curLevel.position.left,
-          finishX: posX,
-          startY: curLevel.position.top,
-          finishY: posY
-        }, curLevel, 'constrain');
-      };
+          var unitWidth = dimensions.tileWidth + dimensions.paddingWidth;
+          var centerX = parentData.width / 2 - (dimensions.tileWidth * curScale / 2);
 
-    }
-  };
-});
+          var posX = match.column * unitWidth + dimensions.marginLeft;
+
+          posX *= -curScale;
+          posX += centerX;
+
+          var unitHeight = dimensions.tileHeight + dimensions.paddingHeight;
+          var centerY = parentData.height / 2 - (dimensions.tileHeight * curScale / 2);
+
+          var posY = match.row * unitHeight + dimensions.marginTop;
+
+          posY *= -curScale;
+          posY += centerY;
+
+          FlingAnimation.start({
+            startX: curLevel.position.left,
+            finishX: posX,
+            startY: curLevel.position.top,
+            finishY: posY
+          }, curLevel, 'constrain');
+
+          scope.setMatchesDisplay(false);
+        };
+
+      }
+    };
+  }
+);

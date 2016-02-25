@@ -46,8 +46,13 @@
     </div>
 
     <div search ng-cloak>
-      <input type="text" ng-model="input" ng-change="search()">
-      <ul>
+      <input
+        type="text"
+        ng-model="input"
+        ng-click="search()"
+        ng-change="search()">
+
+      <ul id="matches" ng-show="showMatches">
         <li ng-repeat="match in matches" ng-click="goTo(match)">
           {{ match.modifier }} {{ match.noun}}
         </li>

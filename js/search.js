@@ -29,6 +29,7 @@ angular.module('modifiedNouns.search', [])
   };
 })
 
+// TODO: zoom in full size on search as well
 // TODO: constrain MN initially
 // TODO: style search
 // TODO: cleanup directive
@@ -41,7 +42,7 @@ angular.module('modifiedNouns.search', [])
     return {
       restrict: 'A',
       scope: true,
-      link: function (scope, element) {
+      link: function (scope) {
         var dimensions = ASSET_DATA.dimensions;
         var matchesEl = $window.document.getElementById('matches');
 
@@ -87,7 +88,8 @@ angular.module('modifiedNouns.search', [])
           parentData = $parent[0].getBoundingClientRect();
 
           var unitWidth = dimensions.tileWidth + dimensions.paddingWidth;
-          var centerX = parentData.width / 2 - (dimensions.tileWidth * curScale / 2);
+          var centerX = parentData.width / 2 -
+            (dimensions.tileWidth * curScale / 2);
 
           var posX = match.column * unitWidth + dimensions.marginLeft;
 
@@ -95,7 +97,8 @@ angular.module('modifiedNouns.search', [])
           posX += centerX;
 
           var unitHeight = dimensions.tileHeight + dimensions.paddingHeight;
-          var centerY = parentData.height / 2 - (dimensions.tileHeight * curScale / 2);
+          var centerY = parentData.height / 2 -
+            (dimensions.tileHeight * curScale / 2);
 
           var posY = match.row * unitHeight + dimensions.marginTop;
 

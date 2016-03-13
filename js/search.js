@@ -29,15 +29,18 @@ angular.module('modifiedNouns.search', [])
   };
 })
 
-// TODO: zoom in full size on search as well
 // TODO: constrain MN initially
 // TODO: style search
 // TODO: cleanup directive
 
+// RELEASE
+
+// TODO: zoom in full size on search as well
+
 .directive('search',
   function (
     $window, $timeout,
-    ASSET_DATA, ModifiedNouns, FlingAnimation, Search
+    ASSET_DATA, ModifiedNouns, Animation, Search
   ) {
     return {
       restrict: 'A',
@@ -78,7 +81,7 @@ angular.module('modifiedNouns.search', [])
         };
 
         scope.goTo = function (match) {
-          FlingAnimation.stop();
+          Animation.stop();
 
           curLevel = ModifiedNouns.getCurLevel();
           curScale = curLevel.size.width / ModifiedNouns.FULL_SIZE.width;
@@ -105,7 +108,7 @@ angular.module('modifiedNouns.search', [])
           posY *= -curScale;
           posY += centerY;
 
-          FlingAnimation.start({
+          Animation.start({
             startX: curLevel.position.left,
             finishX: posX,
             startY: curLevel.position.top,

@@ -1,8 +1,8 @@
 'use strict';
 
-angular.module('modifiedNouns.fling', [])
+angular.module('modifiedNouns.animation', [])
 
-.factory('FlingAnimation', function ($window, $interval, Limit, ModifiedNouns) {
+.factory('Animation', function ($window, $interval, Limit, ModifiedNouns) {
 
   var FREQUENCY = 10;
   var DURATION = 1000;
@@ -89,7 +89,7 @@ angular.module('modifiedNouns.fling', [])
 })
 
 .factory('Fling',
-  function ($window, $document, Geometry, Input, Drag, FlingAnimation) {
+  function ($window, $document, Geometry, Input, Drag, Animation) {
 
     var MAX_IDLE_TIME = 25;
     var MIN_POINTS = 6;
@@ -111,19 +111,19 @@ angular.module('modifiedNouns.fling', [])
       fling.startY  = level.position.top;
       fling.finishY = level.position.top + (flingVector.dir[1] * flingLength);
 
-      FlingAnimation.start(fling, level);
+      Animation.start(fling, level);
     };
 
     return {
       bind: function (element) {
 
         element.on(Input.EVENTS.start, function () {
-          FlingAnimation.stop();
+          Animation.stop();
         });
 
         $document.on('zoomstart', function (e, level) {
           if(!!level && level.element === element) {
-            FlingAnimation.stop();
+            Animation.stop();
           }
         });
 

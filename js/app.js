@@ -14,14 +14,6 @@ angular.module('modifiedNouns', [
 
 .constant('ASSET_DATA', {
   mnSrc: 'data/modified_nouns.json',
-  dimensions: {
-    marginTop: 248,
-    marginLeft: 95,
-    tileHeight: 150,
-    tileWidth: 150,
-    paddingHeight: 56.5,
-    paddingWidth: 56
-  },
   img: {
     template: 'data/{0}/{1}.jpg',
     regExp: /\{(\d)\}/g,
@@ -30,12 +22,24 @@ angular.module('modifiedNouns', [
   }
 })
 
-.factory('ModifiedNouns', function ($window, ASSET_DATA, Loader) {
+.constant('DIMENSIONS', {
+  width: 4500,
+  height: 6000,
+  margin: {
+    left: 95,
+    top: 248
+  },
+  tile: {
+    width: 150,
+    height: 150
+  },
+  spacing: {
+    width: 56,
+    height: 56.5
+  }
+})
 
-  var FULL_SIZE = {
-    width: 4500,
-    height: 6000
-  };
+.factory('ModifiedNouns', function ($window, ASSET_DATA, DIMENSIONS, Loader) {
 
   var levels = new $window.Array(ASSET_DATA.img.levels);
 
@@ -56,7 +60,7 @@ angular.module('modifiedNouns', [
   };
 
   return {
-    FULL_SIZE: FULL_SIZE,
+    DIMENSIONS: DIMENSIONS,
     levels: levels,
     data: null,
 
@@ -117,13 +121,13 @@ angular.module('modifiedNouns', [
       var order = $window.Math.log(scaleFactor) / $window.Math.LN2;
 
       var size = {
-        width: ModifiedNouns.FULL_SIZE.width / scaleFactor,
-        height: ModifiedNouns.FULL_SIZE.height / scaleFactor
+        width: ModifiedNouns.DIMENSIONS.width / scaleFactor,
+        height: ModifiedNouns.DIMENSIONS.height / scaleFactor
       };
 
       var position = {
-        left: (ModifiedNouns.FULL_SIZE.width - size.width) / 2,
-        top: (ModifiedNouns.FULL_SIZE.height - size.height) / 2
+        left: (ModifiedNouns.DIMENSIONS.width - size.width) / 2,
+        top: (ModifiedNouns.DIMENSIONS.height - size.height) / 2
       };
 
       var range = {

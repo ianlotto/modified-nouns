@@ -55,8 +55,8 @@ angular.module('modifiedNouns.zoom', [])
     var prevLevel, level, position, cancel;
 
     var getScaledSize = function (size, z) {
-      size.width = ModifiedNouns.FULL_SIZE.width * z / maxZ;
-      size.height = ModifiedNouns.FULL_SIZE.height * z / maxZ;
+      size.width = ModifiedNouns.DIMENSIONS.width * z / maxZ;
+      size.height = ModifiedNouns.DIMENSIONS.height * z / maxZ;
 
       return size;
     };

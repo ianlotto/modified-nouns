@@ -11,6 +11,8 @@ angular.module('modifiedNouns.animation', [])
 
   var pos = {};
 
+  var dimensions = ASSET_DATA.dimensions;
+
   var i, difference, easeFactor, cancel, curLimit, checkResult;
 
   var easeOut = function (curTime, duration, power) {
@@ -79,6 +81,40 @@ angular.module('modifiedNouns.animation', [])
       $interval.cancel(cancel);
       cancel = undefined;
     }
+  };
+
+  var curLevel, curScale, parentData;
+
+  var flyToTile = function () {
+    curLevel = ModifiedNouns.getCurLevel();
+    curScale = curLevel.size.width / ModifiedNouns.DIMENSIONS.width;
+
+    parentData = curLevel.element.parent()[0].getBoundingClientRect();
+
+    var unitWidth = dimensions.tileWidth + dimensions.paddingWidth;
+    var centerX = parentData.width / 2 -
+      (dimensions.tileWidth * curScale / 2);
+
+    var posX = match.column * unitWidth + dimensions.marginLeft;
+
+    posX *= -curScale;
+    posX += centerX;
+
+    var unitHeight = dimensions.tileHeight + dimensions.paddingHeight;
+    var centerY = parentData.height / 2 -
+      (dimensions.tileHeight * curScale / 2);
+
+    var posY = match.row * unitHeight + dimensions.marginTop;
+
+    posY *= -curScale;
+    posY += centerY;
+
+    start({
+      startX: curLevel.position.left,
+      finishX: posX,
+      startY: curLevel.position.top,
+      finishY: posY
+    }, curLevel, 'constrain');
   };
 
   return {

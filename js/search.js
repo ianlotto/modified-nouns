@@ -38,15 +38,11 @@ angular.module('modifiedNouns.search', [])
 // TODO: zoom in full size on search as well
 
 .directive('search',
-  function (
-    $window, $timeout,
-    ASSET_DATA, ModifiedNouns, Animation, Search
-  ) {
+  function ($window, $timeout, ModifiedNouns, Animation, Search) {
     return {
       restrict: 'A',
       scope: true,
       link: function (scope) {
-        var dimensions = ASSET_DATA.dimensions;
         var matchesEl = $window.document.getElementById('matches');
 
         var $$window = angular.element($window);
@@ -83,37 +79,7 @@ angular.module('modifiedNouns.search', [])
         scope.goTo = function (match) {
           Animation.stop();
 
-          curLevel = ModifiedNouns.getCurLevel();
-          curScale = curLevel.size.width / ModifiedNouns.FULL_SIZE.width;
 
-          $parent = curLevel.element.parent();
-
-          parentData = $parent[0].getBoundingClientRect();
-
-          var unitWidth = dimensions.tileWidth + dimensions.paddingWidth;
-          var centerX = parentData.width / 2 -
-            (dimensions.tileWidth * curScale / 2);
-
-          var posX = match.column * unitWidth + dimensions.marginLeft;
-
-          posX *= -curScale;
-          posX += centerX;
-
-          var unitHeight = dimensions.tileHeight + dimensions.paddingHeight;
-          var centerY = parentData.height / 2 -
-            (dimensions.tileHeight * curScale / 2);
-
-          var posY = match.row * unitHeight + dimensions.marginTop;
-
-          posY *= -curScale;
-          posY += centerY;
-
-          Animation.start({
-            startX: curLevel.position.left,
-            finishX: posX,
-            startY: curLevel.position.top,
-            finishY: posY
-          }, curLevel, 'constrain');
 
           scope.setMatchesDisplay(false);
         };

@@ -26,8 +26,8 @@ angular.module('modifiedNouns', [
   width: 4500,
   height: 6000,
   margin: {
-    left: 95,
-    top: 248
+    width: 95,
+    height: 248
   },
   tile: {
     width: 150,

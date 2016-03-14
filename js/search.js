@@ -78,8 +78,7 @@ angular.module('modifiedNouns.search', [])
 
         scope.goTo = function (match) {
           Animation.stop();
-
-
+          Animation.flyToTile([match.column, match.row]);
 
           scope.setMatchesDisplay(false);
         };

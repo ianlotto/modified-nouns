@@ -11,8 +11,6 @@ angular.module('modifiedNouns.animation', [])
 
   var pos = {};
 
-  var dimensions = ASSET_DATA.dimensions;
-
   var i, difference, easeFactor, cancel, curLimit, checkResult;
 
   var easeOut = function (curTime, duration, power) {
@@ -83,43 +81,50 @@ angular.module('modifiedNouns.animation', [])
     }
   };
 
-  var curLevel, curScale, parentData;
+  var dimensions = ModifiedNouns.DIMENSIONS;
 
-  var flyToTile = function () {
+  var curLevel, curScale, parentData, unit, scaledTile, center, _pos;
+  var dimName, posDir;
+
+  var getTileCenterPos = function (dimName, tileNum, parentData, curScale) {
+    unit = dimensions.tile[dimName] + dimensions.spacing[dimName];
+    scaledTile = dimensions.tile[dimName] * curScale;
+
+    center = (parentData[dimName] / 2) - (scaledTile / 2);
+
+    _pos = tileNum * unit + dimensions.margin[dimName];
+
+    _pos *= -curScale;
+    _pos += center;
+
+    return _pos;
+  };
+
+  var flyToTile = function (tile) {
     curLevel = ModifiedNouns.getCurLevel();
-    curScale = curLevel.size.width / ModifiedNouns.DIMENSIONS.width;
+    curScale = curLevel.size.width / dimensions.width;
 
     parentData = curLevel.element.parent()[0].getBoundingClientRect();
 
-    var unitWidth = dimensions.tileWidth + dimensions.paddingWidth;
-    var centerX = parentData.width / 2 -
-      (dimensions.tileWidth * curScale / 2);
+    for (var i = 0; i < 2; i++) {
+      posDir = i === 0 ? 'x' : 'y';
+      dimName = i === 0 ? 'width' : 'height';
 
-    var posX = match.column * unitWidth + dimensions.marginLeft;
-
-    posX *= -curScale;
-    posX += centerX;
-
-    var unitHeight = dimensions.tileHeight + dimensions.paddingHeight;
-    var centerY = parentData.height / 2 -
-      (dimensions.tileHeight * curScale / 2);
-
-    var posY = match.row * unitHeight + dimensions.marginTop;
-
-    posY *= -curScale;
-    posY += centerY;
+      pos[posDir] = getTileCenterPos(dimName, tile[i], parentData, curScale);
+    }
 
     start({
       startX: curLevel.position.left,
-      finishX: posX,
+      finishX: pos.x,
       startY: curLevel.position.top,
-      finishY: posY
+      finishY: pos.y
     }, curLevel, 'constrain');
   };
 
   return {
     start: start,
-    stop: stop
+    stop: stop,
+    flyToTile: flyToTile
   };
 
 })

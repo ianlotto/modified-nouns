@@ -31,33 +31,32 @@ angular.module('modifiedNouns.search', [])
 
 // TODO: constrain MN initially
 // TODO: style search
-// TODO: cleanup directive
+// TODO: mobile search
 
 // RELEASE
 
 // TODO: zoom in full size on search as well
 
 .directive('search',
-  function ($window, $timeout, ModifiedNouns, Animation, Search) {
+  function ($window, $timeout, Animation, Search) {
     return {
       restrict: 'A',
       scope: true,
-      link: function (scope) {
-        var matchesEl = $window.document.getElementById('matches');
-
+      link: function (scope, element) {
+        var inputEl = element.find('input')[0];
         var $$window = angular.element($window);
 
         var curLevel, curScale, $parent, parentData;
 
         var hideMatches = function (e) {
-          if(e.target !== matchesEl) {
-            $$window.off('click', hideMatches);
-
-            scope.setMatchesDisplay(false);
+          if(e.target !== inputEl) {
+            $$window.off('mousedown', hideMatches);
+            $timeout(function () {
+              scope.setMatchesDisplay(false);
+            });
           }
         };
 
-        scope.modifiedNouns = ModifiedNouns;
         scope.input = null;
 
         scope.setMatchesDisplay = function (show) {
@@ -65,23 +64,23 @@ angular.module('modifiedNouns.search', [])
             !!show : !scope.showMatches;
         };
 
-        scope.$watch('showMatches', function (n) {
-          if(!!n) {
-            $$window.on('mousedown', hideMatches);
-          }
-        });
-
         scope.search = function () {
           scope.matches = !!scope.input ? Search.search(scope.input) : [];
           scope.setMatchesDisplay(scope.matches.length > 0);
         };
 
-        scope.goTo = function (match) {
+        scope.flyTo = function (match) {
           Animation.stop();
           Animation.flyToTile([match.column, match.row]);
 
-          scope.setMatchesDisplay(false);
+          scope.input = [match.modifier, match.noun].join(' ');
         };
+
+        scope.$watch('showMatches', function (n) {
+          if(!!n) {
+            $$window.on('mousedown', hideMatches);
+          }
+        });
 
       }
     };

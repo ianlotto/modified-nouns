@@ -29,7 +29,6 @@ angular.module('modifiedNouns.search', [])
   };
 })
 
-// TODO: constrain MN initially
 // TODO: style search
 // TODO: mobile search
 
@@ -72,8 +71,6 @@ angular.module('modifiedNouns.search', [])
         scope.flyTo = function (match) {
           Animation.stop();
           Animation.flyToTile([match.column, match.row]);
-
-          scope.input = [match.modifier, match.noun].join(' ');
         };
 
         scope.$watch('showMatches', function (n) {

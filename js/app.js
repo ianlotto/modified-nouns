@@ -39,79 +39,84 @@ angular.module('modifiedNouns', [
   }
 })
 
-.factory('ModifiedNouns', function ($window, ASSET_DATA, DIMENSIONS, Loader) {
+.factory('ModifiedNouns',
+  function ($window, ASSET_DATA, DIMENSIONS, Loader, Limit) {
 
-  var levels = new $window.Array(ASSET_DATA.img.levels);
+    var levels = new $window.Array(ASSET_DATA.img.levels);
 
-  var level, curLevel, levelData, centerX, centerY;
+    var level, curLevel, levelData, parentData, centerX, centerY;
 
-  var positionLevels = function (centerX, centerY) {
-    for (var i = 0; i < levels.length; i++) {
-      level = levels[i];
+    var positionLevels = function (centerX, centerY) {
+      for (var i = 0; i < levels.length; i++) {
+        level = levels[i];
 
-      level.position.left = centerX - level.size.width / 2;
-      level.position.top = centerY - level.size.height / 2;
+        level.position.left = centerX - level.size.width / 2;
+        level.position.top = centerY - level.size.height / 2;
 
-      level.element.css({
-        left: level.position.left + 'px',
-        top:  level.position.top + 'px'
-      });
-    }
-  };
+        level.element.css({
+          left: level.position.left + 'px',
+          top:  level.position.top + 'px'
+        });
+      }
+    };
 
-  return {
-    DIMENSIONS: DIMENSIONS,
-    levels: levels,
-    data: null,
+    return {
+      DIMENSIONS: DIMENSIONS,
+      levels: levels,
+      data: null,
 
-    load: function () {
-      var modifiedNouns = this;
+      load: function () {
+        var modifiedNouns = this;
 
-      Loader.getImages();
+        Loader.getImages();
 
-      Loader.getModifiedNouns().then(function (data) {
-        modifiedNouns.data = data;
-      });
-    },
+        Loader.getModifiedNouns().then(function (data) {
+          modifiedNouns.data = data;
+        });
+      },
 
-    init: function () {
-      this.positionLevel(curLevel = levels[0], 0, 0);
-    },
+      init: function () {
+        this.positionLevel(curLevel = levels[0], 0, 0);
 
-    getCurLevel: function () {
-      return curLevel;
-    },
+        parentData = curLevel.element.parent()[0].getBoundingClientRect();
+        Limit.setXY(curLevel.size, parentData);
+      },
 
-    hideLevel: function (level) {
-      level.element.css('display', 'none');
-    },
+      getCurLevel: function () {
+        return curLevel;
+      },
 
-    positionLevel: function (level, left, top) {
-      curLevel = level; // Positioning the level makes it current
+      hideLevel: function (level) {
+        level.element.css('display', 'none');
+      },
 
-      centerX = left + level.size.width / 2;
-      centerY = top + level.size.height / 2;
+      positionLevel: function (level, left, top) {
+        curLevel = level; // Positioning the level makes it current
 
-      positionLevels(centerX, centerY);
+        centerX = left + level.size.width / 2;
+        centerY = top + level.size.height / 2;
 
-      return levelData;
-    },
+        positionLevels(centerX, centerY);
 
-    scaleLevel: function (level, size, position) {
-      level.size.width = size.width;
-      level.size.height = size.height;
+        return levelData;
+      },
 
-      this.positionLevel(level, position.x, position.y);
+      scaleLevel: function (level, size, position) {
+        level.size.width = size.width;
+        level.size.height = size.height;
 
-      level.element.css({
-        display: 'block',
-        width:  size.width + 'px',
-        height: size.height + 'px'
-      });
-    }
+        this.positionLevel(level, position.x, position.y);
 
-  };
-})
+        level.element.css({
+          display: 'block',
+          width:  size.width + 'px',
+          height: size.height + 'px'
+        });
+      }
+
+    };
+  }
+)
 
 .directive('level', function ($window, ModifiedNouns) {
   return {

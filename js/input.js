@@ -220,4 +220,37 @@ angular.module('modifiedNouns.input', [])
     getTouches: getTouches,
     getWheelTouch: getWheelTouch
   };
+})
+
+.directive('touchStart', function ($window, $parse, Input) {
+  return {
+    restrict: 'A',
+    scope: false,
+    link: function (scope, element, attrs) {
+      var suppressMouseDown = false;
+      var expression = attrs.touchStart;
+
+      var bustMouseDown = function (e) {
+        $window.removeEventListener('mousedown', bustMouseDown, true);
+        e.stopPropagation();
+      };
+
+      element.on(Input.EVENTS.start, function (e) {
+        e.stopPropagation();
+
+        if(e.type === 'touchstart') {
+          suppressMouseDown = true;
+          // Global bust next mousedown
+          $window.addEventListener('mousedown', bustMouseDown, true);
+        } else if(e.type === 'mousedown' && suppressMouseDown) {
+          suppressMouseDown = false;
+          return false;
+        }
+
+        scope.$apply(function () {
+          $parse(expression)(scope);
+        });
+      });
+    }
+  };
 });

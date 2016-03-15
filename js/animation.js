@@ -179,9 +179,7 @@ angular.module('modifiedNouns.animation', [])
             idleTime = $window.Date.now() - lastPoint.time;
 
             if(decide(idleTime, Drag.points.length)) {
-              startPoint = Drag.points[
-                Drag.points.length - MIN_POINTS
-              ];
+              startPoint = Drag.points[Drag.points.length - MIN_POINTS];
 
               create(level, startPoint, lastPoint);
             }

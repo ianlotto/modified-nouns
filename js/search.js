@@ -7,7 +7,7 @@ angular.module('modifiedNouns.search', [])
 
   return {
     search: function (input) {
-      searchExp = new $window.RegExp('^' + input);
+      searchExp = new $window.RegExp('^' + input.toLowerCase());
 
       matches = [];
 
@@ -30,14 +30,12 @@ angular.module('modifiedNouns.search', [])
 })
 
 // TODO: style search
-// TODO: mobile search
 
 // RELEASE
 
 // TODO: zoom in full size on search as well
 
-.directive('search',
-  function ($window, $timeout, Animation, Search) {
+.directive('search', function ($window, $timeout, Input, Animation, Search) {
     return {
       restrict: 'A',
       scope: true,
@@ -48,12 +46,11 @@ angular.module('modifiedNouns.search', [])
         var curLevel, curScale, $parent, parentData;
 
         var hideMatches = function (e) {
-          if(e.target !== inputEl) {
-            $$window.off('mousedown', hideMatches);
-            $timeout(function () {
-              scope.setMatchesDisplay(false);
-            });
-          }
+          $$window.off(Input.EVENTS.start, hideMatches);
+
+          $timeout(function () {
+            scope.setMatchesDisplay(false);
+          });
         };
 
         scope.input = null;
@@ -71,11 +68,13 @@ angular.module('modifiedNouns.search', [])
         scope.flyTo = function (match) {
           Animation.stop();
           Animation.flyToTile([match.column, match.row]);
+
+          scope.setMatchesDisplay(false);
         };
 
         scope.$watch('showMatches', function (n) {
           if(!!n) {
-            $$window.on('mousedown', hideMatches);
+            $$window.on(Input.EVENTS.start, hideMatches);
           }
         });
 

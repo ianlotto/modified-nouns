@@ -30,9 +30,11 @@ angular.module('modifiedNouns.search', [])
 })
 
 // TODO: style search
+// TODO: only show five most relevant matches
 
 // RELEASE
 
+// TODO: keyboard interface for search
 // TODO: zoom in full size on search as well
 
 .directive('search', function ($window, $timeout, Input, Animation, Search) {
@@ -62,6 +64,7 @@ angular.module('modifiedNouns.search', [])
 
         scope.search = function () {
           scope.matches = !!scope.input ? Search.search(scope.input) : [];
+
           scope.setMatchesDisplay(scope.matches.length > 0);
         };
 

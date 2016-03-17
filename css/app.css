@@ -2,6 +2,7 @@ html, body, ul, h1, h2, h3, h4, h5 {
   margin: 0;
   padding: 0;
   list-style-type: none;
+  font-family: Arial, sans-serif;
 }
 
 * {
@@ -56,10 +57,31 @@ button {
   position: absolute;
   top: 20px;
   left: 20px;
+  cursor: pointer;
+
+  border: 2px solid #333;
+}
+
+[search] input {
+  width: 300px;
+  height: 20px;
+  padding: 10px 15px;
+  border: none;
 }
 
 [search] ul {
   background-color: #fff;
+  overflow: auto;
+  max-height: 400px;
+}
+
+[search] li {
+  padding: 10px 15px;
+  border-top: 1px solid #ddd;
+}
+
+[search] li:hover {
+  background-color: #eee;
 }
 
 [toggle-fullscreen] {

@@ -30,7 +30,6 @@ angular.module('modifiedNouns.search', [])
 })
 
 // TODO: style search
-// TODO: only show five most relevant matches
 
 // RELEASE
 
@@ -41,13 +40,10 @@ angular.module('modifiedNouns.search', [])
     return {
       restrict: 'A',
       scope: true,
-      link: function (scope, element) {
-        var inputEl = element.find('input')[0];
+      link: function (scope) {
         var $$window = angular.element($window);
 
-        var curLevel, curScale, $parent, parentData;
-
-        var hideMatches = function (e) {
+        var hideMatches = function () {
           $$window.off(Input.EVENTS.start, hideMatches);
 
           $timeout(function () {

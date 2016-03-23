@@ -29,11 +29,7 @@ angular.module('modifiedNouns.search', [])
   };
 })
 
-
-// TODO: mobile search ui bugs
-
-// RELEASE
-
+// TODO: more responsive flyTo without compromising touch scroll
 // TODO: keyboard interface for search
 // TODO: zoom in full size on search as well
 
@@ -42,6 +38,8 @@ angular.module('modifiedNouns.search', [])
       restrict: 'A',
       scope: true,
       link: function (scope, element) {
+        var touchMoving = false;
+
         var $$window = angular.element($window);
 
         var hideMatches = function () {
@@ -65,6 +63,10 @@ angular.module('modifiedNouns.search', [])
         };
 
         scope.flyTo = function (match) {
+          if(touchMoving) {
+            return;
+          }
+
           Animation.stop();
           Animation.flyToTile([match.column, match.row]);
 
@@ -73,6 +75,7 @@ angular.module('modifiedNouns.search', [])
 
         angular.forEach(['start', 'move'], function (type) {
           element.on(Input.EVENTS[type], function (e) {
+            touchMoving = e.type === 'touchmove' ? true : false;
             e.stopPropagation();
           });
         });

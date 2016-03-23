@@ -45,18 +45,18 @@
 
     </div>
 
-    <div search ng-cloak>
+    <div search touch-start ng-cloak>
       <input
         type="text"
         placeholder="Search Modified Nouns"
         ng-model="input"
-        touch-start="search()"
+        touch-end="search()"
         ng-change="search()">
 
       <ul id="matches" ng-show="showMatches">
         <li
           ng-repeat="match in matches"
-          ng-mouseup="flyTo(match)">{{ match.modifier }} {{ match.noun}}</li>
+          touch-end="flyTo(match)">{{ match.modifier }} {{ match.noun}}</li>
       </ul>
     </div>
 

@@ -228,7 +228,7 @@ angular.module('modifiedNouns.input', [])
     scope: false,
     link: function (scope, element, attrs) {
       var suppressMouseDown = false;
-      var expression = attrs.touchStart;
+      var expression = attrs.touchStart || null;
 
       var bustMouseDown = function (e) {
         $window.removeEventListener('mousedown', bustMouseDown, true);
@@ -247,9 +247,46 @@ angular.module('modifiedNouns.input', [])
           return false;
         }
 
-        scope.$apply(function () {
-          $parse(expression)(scope);
-        });
+        if(!!expression) {
+          scope.$apply(function () {
+            $parse(expression)(scope);
+          });
+        }
+      });
+    }
+  };
+})
+
+.directive('touchEnd', function ($window, $parse, Input) {
+  return {
+    restrict: 'A',
+    scope: false,
+    link: function (scope, element, attrs) {
+      var suppressMouseUp = false;
+      var expression = attrs.touchEnd || null;
+
+      var bustMouseUp = function (e) {
+        $window.removeEventListener('mouseup', bustMouseUp, true);
+        e.stopPropagation();
+      };
+
+      element.on(Input.EVENTS.end, function (e) {
+        e.stopPropagation();
+
+        if(e.type === 'touchend') {
+          suppressMouseUp = true;
+          // Global bust next mouseup
+          $window.addEventListener('mouseup', bustMouseUp, true);
+        } else if(e.type === 'mouseup' && suppressMouseUp) {
+          suppressMouseUp = false;
+          return false;
+        }
+
+        if(!!expression) {
+          scope.$apply(function () {
+            $parse(expression)(scope);
+          });
+        }
       });
     }
   };

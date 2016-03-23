@@ -29,7 +29,8 @@ angular.module('modifiedNouns.search', [])
   };
 })
 
-// TODO: style search
+
+// TODO: mobile search ui bugs
 
 // RELEASE
 

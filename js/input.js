@@ -220,74 +220,56 @@ angular.module('modifiedNouns.input', [])
     getTouches: getTouches,
     getWheelTouch: getWheelTouch
   };
-})
-
-.directive('touchStart', function ($window, $parse, Input) {
-  return {
-    restrict: 'A',
-    scope: false,
-    link: function (scope, element, attrs) {
-      var suppressMouseDown = false;
-      var expression = attrs.touchStart || null;
-
-      var bustMouseDown = function (e) {
-        $window.removeEventListener('mousedown', bustMouseDown, true);
-        e.stopPropagation();
-      };
-
-      element.on(Input.EVENTS.start, function (e) {
-        e.stopPropagation();
-
-        if(e.type === 'touchstart') {
-          suppressMouseDown = true;
-          // Global bust next mousedown
-          $window.addEventListener('mousedown', bustMouseDown, true);
-        } else if(e.type === 'mousedown' && suppressMouseDown) {
-          suppressMouseDown = false;
-          return false;
-        }
-
-        if(!!expression) {
-          scope.$apply(function () {
-            $parse(expression)(scope);
-          });
-        }
-      });
-    }
-  };
-})
-
-.directive('touchEnd', function ($window, $parse, Input) {
-  return {
-    restrict: 'A',
-    scope: false,
-    link: function (scope, element, attrs) {
-      var suppressMouseUp = false;
-      var expression = attrs.touchEnd || null;
-
-      var bustMouseUp = function (e) {
-        $window.removeEventListener('mouseup', bustMouseUp, true);
-        e.stopPropagation();
-      };
-
-      element.on(Input.EVENTS.end, function (e) {
-        e.stopPropagation();
-
-        if(e.type === 'touchend') {
-          suppressMouseUp = true;
-          // Global bust next mouseup
-          $window.addEventListener('mouseup', bustMouseUp, true);
-        } else if(e.type === 'mouseup' && suppressMouseUp) {
-          suppressMouseUp = false;
-          return false;
-        }
-
-        if(!!expression) {
-          scope.$apply(function () {
-            $parse(expression)(scope);
-          });
-        }
-      });
-    }
-  };
 });
+
+(function (angular) {
+  var inputModule = angular.module('modifiedNouns.input');
+
+  var DIRECTIVE_MAP = { touchStart: 'mousedown', touchEnd: 'mouseup' };
+
+  var makeDirective = function (mouseEvent, directiveName) {
+    var touchEvent = directiveName.toLowerCase();
+
+    var directive = function ($window, $parse, Input) {
+      return {
+        restrict: 'A',
+        scope: false,
+        link: function (scope, element, attrs) {
+          var suppressMouse = false;
+          var expression = attrs[directiveName] || null;
+
+          var bustMouse = function (e) {
+            $window.removeEventListener(mouseEvent, bustMouse, true);
+            e.stopPropagation();
+          };
+
+          element.on(Input.EVENTS.end, function (e) {
+            e.stopPropagation();
+
+            if(e.type === touchEvent) {
+              suppressMouse = true;
+              // Global bust next mouseup
+              $window.addEventListener(mouseEvent, bustMouse, true);
+            } else if(e.type === mouseEvent && suppressMouse) {
+              suppressMouse = false;
+              return false;
+            }
+
+            if(!!expression) {
+              scope.$apply(function () {
+                $parse(expression)(scope);
+              });
+            }
+          });
+
+        }
+      };
+    };
+
+    //directive.$inject = ['$window', '$parse', 'Input'];
+
+    inputModule.directive(directiveName, directive);
+  };
+
+  angular.forEach(DIRECTIVE_MAP, makeDirective);
+})(angular);

@@ -217,6 +217,17 @@ angular.module('modifiedNouns', [
   };
 })
 
+.directive('featureClasses', function ($window) {
+  return {
+    restrict: 'A',
+    link: function (scope, element) {
+      var hasTouch = $window.hasOwnProperty('ontouchstart');
+
+      element.addClass((hasTouch ? '' : 'no-') + 'touch');
+    }
+  };
+})
+
 .run(function ($window, ModifiedNouns) {
   angular.element($window).on('touchmove', function (e) {
     e.preventDefault(); // Prevent window scrolling / bouncing

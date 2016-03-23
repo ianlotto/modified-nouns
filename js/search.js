@@ -29,7 +29,6 @@ angular.module('modifiedNouns.search', [])
   };
 })
 
-// TODO: more responsive flyTo without compromising touch scroll
 // TODO: keyboard interface for search
 // TODO: zoom in full size on search as well
 

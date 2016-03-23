@@ -95,7 +95,7 @@ button {
   border-top: 1px solid rgb(190, 190, 190);
 }
 
-[search] li:hover {
+body.no-touch [search] li:hover {
   background-color: rgb(238, 238, 238);
 }
 

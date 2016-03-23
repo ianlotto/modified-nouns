@@ -54,9 +54,9 @@
         ng-change="search()">
 
       <ul id="matches" ng-show="showMatches">
-        <li ng-repeat="match in matches" touch-start="flyTo(match)">
-          {{ match.modifier }} {{ match.noun}}
-        </li>
+        <li
+          ng-repeat="match in matches"
+          ng-mouseup="flyTo(match)">{{ match.modifier }} {{ match.noun}}</li>
       </ul>
     </div>
 

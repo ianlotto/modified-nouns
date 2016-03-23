@@ -41,7 +41,7 @@ angular.module('modifiedNouns.search', [])
     return {
       restrict: 'A',
       scope: true,
-      link: function (scope) {
+      link: function (scope, element) {
         var $$window = angular.element($window);
 
         var hideMatches = function () {
@@ -61,7 +61,6 @@ angular.module('modifiedNouns.search', [])
 
         scope.search = function () {
           scope.matches = !!scope.input ? Search.search(scope.input) : [];
-
           scope.setMatchesDisplay(scope.matches.length > 0);
         };
 
@@ -71,6 +70,12 @@ angular.module('modifiedNouns.search', [])
 
           scope.setMatchesDisplay(false);
         };
+
+        angular.forEach(['start', 'move'], function (type) {
+          element.on(Input.EVENTS[type], function (e) {
+            e.stopPropagation();
+          });
+        });
 
         scope.$watch('showMatches', function (n) {
           if(!!n) {

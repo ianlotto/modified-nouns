@@ -266,9 +266,9 @@ angular.module('modifiedNouns.input', [])
       };
     };
 
-    directive.$inject = ['$window', '$parse', 'Input'];
+    var annotatedDirective = ['$window', '$parse', 'Input', directive];
 
-    inputModule.directive(directiveName, directive);
+    inputModule.directive(directiveName, annotatedDirective);
   };
 
   angular.forEach(DIRECTIVE_MAP, makeDirective);

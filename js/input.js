@@ -266,7 +266,7 @@ angular.module('modifiedNouns.input', [])
       };
     };
 
-    //directive.$inject = ['$window', '$parse', 'Input'];
+    // TODO: directive.$inject = ['$window', '$parse', 'Input'];
 
     inputModule.directive(directiveName, directive);
   };
